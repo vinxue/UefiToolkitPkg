@@ -1,0 +1,33 @@
+## @file
+# Provides driver and definitions to build UefiPkg in EDKII bios.
+#
+# Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
+# This program and the accompanying materials are licensed and made available under
+# the terms and conditions of the BSD License that accompanies this distribution.
+# The full text of the license may be found at
+# http://opensource.org/licenses/bsd-license.php.
+#
+# THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+# WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = UefiPkg
+  PACKAGE_GUID                   = F6E826D7-39F2-463C-88CE-20476176696E
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+
+
+[LibraryClasses]
+
+
+[Guids]
+  #
+  # GUID defined in package
+  #
+  gUefiPkgTokenSpaceGuid           = { 0xbbfd5030, 0xc0fd, 0x44b3, { 0xa8, 0x2f, 0x4c, 0x47, 0x1a, 0xe7, 0x43, 0x38 } }
+
+[PcdsFixedAtBuild]
