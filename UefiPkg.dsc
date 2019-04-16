@@ -64,6 +64,7 @@
   UefiPkg/Drivers/PrintScreenLogger/PrintScreenLogger.inf
   UefiPkg/Application/UefiTool/UefiTool.inf
   UefiPkg/Application/TcpTransport/TcpTransport.inf
+  UefiPkg/Application/DiskBlock/DiskBlock.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
