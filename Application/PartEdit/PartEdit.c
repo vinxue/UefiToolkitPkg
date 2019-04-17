@@ -11,7 +11,7 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#include "DiskBlock.h"
+#include "PartEdit.h"
 
 #define FLASH_DEVICE_PATH_SIZE(DevPath) ( GetDevicePathSize (DevPath) - \
                                             sizeof (EFI_DEVICE_PATH_PROTOCOL))

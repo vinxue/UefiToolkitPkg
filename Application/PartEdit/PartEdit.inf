@@ -15,14 +15,14 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = DiskBlock
+  BASE_NAME                      = PartEdit
   FILE_GUID                      = 5BE2DE35-C16B-4B67-B06C-DD7E14141DBC
   MODULE_TYPE                    = UEFI_APPLICATION
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = ShellCEntryLib
 
 [Sources]
-  DiskBlock.c
+  PartEdit.c
 
 [Packages]
   MdePkg/MdePkg.dec

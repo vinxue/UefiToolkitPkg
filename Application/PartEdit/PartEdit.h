@@ -11,8 +11,8 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#ifndef _DISK_BLOCK_H_
-#define _DISK_BLOCK_H_
+#ifndef _PART_EDIT_H_
+#define _PART_EDIT_H_
 
 #include <PiDxe.h>
 #include <Uefi.h>

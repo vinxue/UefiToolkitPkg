@@ -18,8 +18,8 @@
   PLATFORM_VERSION               = 0.1
   DSC_SPECIFICATION              = 0x00010005
   OUTPUT_DIRECTORY               = Build/UefiPkg
-  SUPPORTED_ARCHITECTURES        = IA32|IPF|X64|EBC
-  BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
+  SUPPORTED_ARCHITECTURES        = IA32|X64
+  BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
 
 [LibraryClasses]
@@ -64,7 +64,7 @@
   UefiPkg/Drivers/PrintScreenLogger/PrintScreenLogger.inf
   UefiPkg/Application/UefiTool/UefiTool.inf
   UefiPkg/Application/TcpTransport/TcpTransport.inf
-  UefiPkg/Application/DiskBlock/DiskBlock.inf
+  UefiPkg/Application/PartEdit/PartEdit.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
