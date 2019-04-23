@@ -201,10 +201,10 @@ InitDiskPartition (
   EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
   EFI_DEVICE_PATH_PROTOCOL           *NextNode;
   HARDDRIVE_DEVICE_PATH              *PartitionNode;
-  UINTN                               NumHandles;
+  UINTN                              NumHandles;
   EFI_HANDLE                         *AllHandles;
-  UINTN                               LoopIndex;
-  EFI_HANDLE                          FlashHandle;
+  UINTN                              LoopIndex;
+  EFI_HANDLE                         FlashHandle;
   EFI_BLOCK_IO_PROTOCOL              *FlashBlockIo;
   EFI_PARTITION_ENTRY                *PartitionEntries;
   PARTITION_LIST                     *Entry;
@@ -418,10 +418,21 @@ ReadPartition (
   EFI_BLOCK_IO_PROTOCOL    *BlockIo;
   EFI_DISK_IO_PROTOCOL     *DiskIo;
   UINT32                   MediaId;
+  UINTN                    PartitionSize;
 
   Status = OpenPartition (PartitionName, &BlockIo, &DiskIo);
   if (EFI_ERROR (Status)) {
     return Status;
+  }
+
+  //
+  // Check read partition size will fit on device.
+  //
+  PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+  if (PartitionSize < BufferSize) {
+    DEBUG ((EFI_D_ERROR, "Partition not big enough.\n"));
+    DEBUG ((EFI_D_ERROR, "Partition Size: %d\nImage Size: %d\n",  PartitionSize, BufferSize));
+    return EFI_VOLUME_FULL;
   }
 
   MediaId = BlockIo->Media->MediaId;
@@ -448,10 +459,21 @@ WritePartition (
   EFI_BLOCK_IO_PROTOCOL    *BlockIo;
   EFI_DISK_IO_PROTOCOL     *DiskIo;
   UINT32                   MediaId;
+  UINTN                    PartitionSize;
 
   Status = OpenPartition (PartitionName, &BlockIo, &DiskIo);
   if (EFI_ERROR (Status)) {
     return Status;
+  }
+
+  //
+  // Check write partition size will fit on device.
+  //
+  PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+  if (PartitionSize < BufferSize) {
+    DEBUG ((EFI_D_ERROR, "Partition not big enough.\n"));
+    DEBUG ((EFI_D_ERROR, "Partition Size: %d\nImage Size: %d\n",  PartitionSize, BufferSize));
+    return EFI_VOLUME_FULL;
   }
 
   MediaId = BlockIo->Media->MediaId;
