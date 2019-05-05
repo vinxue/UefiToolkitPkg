@@ -1,0 +1,14 @@
+language: c
+
+before_install:
+ - chmod +x build.sh
+
+matrix:
+  include:
+  - os: linux
+    dist: xenial
+    compiler: gcc
+
+    script:
+    - "./build.sh"
+ 
