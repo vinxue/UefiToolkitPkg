@@ -118,7 +118,7 @@ GetProcessorsCpuLocation (
   Status = gBS->LocateProtocol (
                   &gEfiMpServiceProtocolGuid,
                   NULL,
-                  &mMpService
+                  (VOID **)&mMpService
                   );
   if (EFI_ERROR (Status)) {
     //
