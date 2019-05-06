@@ -30,6 +30,7 @@
   TimerLib|PcAtChipsetPkg/Library/AcpiTimerLib/DxeAcpiTimerLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
+  CacheMaintenanceLib|MdePkg/Library/BaseCacheMaintenanceLib/BaseCacheMaintenanceLib.inf
   PrintLib|MdePkg/Library/BasePrintLib/BasePrintLib.inf
   HiiLib|MdeModulePkg/Library/UefiHiiLib/UefiHiiLib.inf
   UefiHiiServicesLib|MdeModulePkg/Library/UefiHiiServicesLib/UefiHiiServicesLib.inf
@@ -52,6 +53,8 @@
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
 
+  PlatformFlashAccessLib|UefiPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
+
 [LibraryClasses.common.PEIM]
   PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
   PeiServicesTablePointerLib|MdePkg/Library/PeiServicesTablePointerLib/PeiServicesTablePointerLib.inf
@@ -65,6 +68,7 @@
   UefiPkg/Application/UefiTool/UefiTool.inf
   UefiPkg/Application/TcpTransport/TcpTransport.inf
   UefiPkg/Application/PartEdit/PartEdit.inf
+  UefiPkg/Application/FlashTool/FlashTool.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
