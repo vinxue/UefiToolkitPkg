@@ -1,0 +1,75 @@
+##  @file
+#  This is the UEFI debug application
+#
+#  Copyright (c) 2017 - 2019, Gavin Xue. All rights reserved.<BR>
+#
+#  This program and the accompanying materials
+#  are licensed and made available under the terms and conditions of the BSD License
+#  which accompanies this distribution. The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = UefiAvb
+  FILE_GUID                      = 46B711EF-C129-4487-B5B2-19705DD53137
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = UefiMain
+
+[Sources]
+  main.c
+  uefi_avb_boot.c
+  uefi_avb_ops.c
+  uefi_avb_sysdeps.c
+  uefi_avb_util.c
+
+  libavb/avb_chain_partition_descriptor.c
+  libavb/avb_cmdline.c
+  libavb/avb_crc32.c
+  libavb/avb_crypto.c
+  libavb/avb_descriptor.c
+  libavb/avb_footer.c
+  libavb/avb_hashtree_descriptor.c
+  libavb/avb_hash_descriptor.c
+  libavb/avb_kernel_cmdline_descriptor.c
+  libavb/avb_property_descriptor.c
+  libavb/avb_rsa.c
+  libavb/avb_sha256.c
+  libavb/avb_sha512.c
+  libavb/avb_slot_verify.c
+  #libavb/avb_sysdeps_posix.c
+  libavb/avb_util.c
+  libavb/avb_vbmeta_image.c
+  libavb/avb_version.c
+
+  libavb_ab/avb_ab_flow.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  UefiApplicationEntryPoint
+  UefiLib
+  BaseLib
+  ShellLib
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  BaseMemoryLib
+  DevicePathLib
+
+[Protocols]
+  gEfiBlockIoProtocolGuid
+  gEfiDiskIoProtocolGuid
+
+[BuildOptions]
+  GCC:DEBUG_*_*_CC_FLAGS     = -DAVB_AB_I_UNDERSTAND_LIBAVB_AB_IS_DEPRECATED -D__x86_64__ -DAVB_COMPILATION -DAVB_ENABLE_DEBUG
+  GCC:RELEASE_*_*_CC_FLAGS   = -DAVB_AB_I_UNDERSTAND_LIBAVB_AB_IS_DEPRECATED -D__x86_64__ -DAVB_COMPILATION -DAVB_ENABLE_DEBUG
+  MSFT:DEBUG_*_*_CC_FLAGS    = /DAVB_AB_I_UNDERSTAND_LIBAVB_AB_IS_DEPRECATED /D__x86_64__ /DAVB_COMPILATION /DAVB_ENABLE_DEBUG
+  MSFT:RELEASE_*_*_CC_FLAGS  = /DAVB_AB_I_UNDERSTAND_LIBAVB_AB_IS_DEPRECATED /D__x86_64__ /DAVB_COMPILATION /DAVB_ENABLE_DEBUG

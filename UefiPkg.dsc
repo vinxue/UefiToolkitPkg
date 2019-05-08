@@ -69,6 +69,7 @@
   UefiPkg/Application/TcpTransport/TcpTransport.inf
   UefiPkg/Application/PartEdit/PartEdit.inf
   UefiPkg/Application/FlashTool/FlashTool.inf
+  UefiPkg/Application/UefiAvb/UefiAvb.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
