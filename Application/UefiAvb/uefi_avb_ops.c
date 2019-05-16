@@ -35,6 +35,8 @@
 
 #define uefi_call_wrapper(func, va_num, ...) func(__VA_ARGS__)
 
+CHAR16 BootDevicePath[] = L"PciRoot(0x0)/Pci(0x1,0x6)/Pci(0x0,0x0)";
+
 /* GPT related constants. */
 #define GPT_REVISION 0x00010000
 #define GPT_MAGIC "EFI PART"
@@ -329,6 +331,7 @@ static AvbIOResult get_size_of_partition(AvbOps* ops,
   return AVB_IO_RESULT_OK;
 }
 
+#if 0
 /* Helper method to get the parent path to the current |walker| path
  * given the initial path, |init|. Resulting path is stored in |next|.
  * Caller is responsible for freeing |next|. Stores allocated bytes
@@ -355,6 +358,7 @@ static EFI_STATUS walk_path(IN EFI_DEVICE_PATH* init,
       (uint8_t*)(*next) + walker_bytes, EndDevicePath, sizeof(EFI_DEVICE_PATH));
   return EFI_SUCCESS;
 }
+#endif
 
 /* Helper method to validate a GPT header, |gpth|.
  *
@@ -397,6 +401,7 @@ static EFI_STATUS validate_gpt(const IN GPTHeader* gpth) {
   return EFI_SUCCESS;
 }
 
+#if 0
 /* Queries |disk_handle| for a |block_io| device and the corresponding
  * path, |block_path|.  The |block_io| device is found by iteratively
  * querying parent devices and checking for a GPT Header.  This
@@ -520,6 +525,123 @@ static EFI_STATUS get_disk_block_io(IN EFI_HANDLE* block_handle,
 
   (*block_io) = NULL;
   return EFI_NOT_FOUND;
+}
+#endif
+
+#define DEVICE_PATH_SIZE(DevPath) ( GetDevicePathSize (DevPath) - sizeof (EFI_DEVICE_PATH_PROTOCOL))
+
+/* Queries |disk_handle| for a |block_io| device and the corresponding
+ * path, |block_path|.  The |block_io| device is found by iteratively
+ * querying parent devices and checking for a GPT Header.  This
+ * ensures the resulting |block_io| device is the top level block
+ * device having access to partition entries. Returns EFI_STATUS
+ * EFI_NOT_FOUND on failure, EFI_SUCCESS otherwise.
+ */
+static EFI_STATUS get_disk_block_io(IN EFI_HANDLE* block_handle,
+                                    OUT EFI_BLOCK_IO** block_io,
+                                    OUT EFI_DISK_IO** disk_io,
+                                    OUT EFI_DEVICE_PATH** io_path) {
+  EFI_STATUS Status;
+  EFI_DEVICE_PATH* init_path;
+  UINTN                     Index;
+  UINTN                     HandleCount;
+  EFI_HANDLE                *HandleBuffer;
+  EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
+  GPTHeader gpt_header;
+
+  ZeroMem (&gpt_header, sizeof(GPTHeader));
+
+  Print (L"BootDevicePath: %S\n", BootDevicePath);
+  init_path = ConvertTextToDevicePath (BootDevicePath);
+  if (!init_path) {
+    return EFI_NOT_FOUND;
+  }
+
+  //
+  // Locate all the BlockIo protocol
+  //
+  Status = gBS->LocateHandleBuffer (
+                  ByProtocol,
+                  &gEfiBlockIoProtocolGuid,
+                  NULL,
+                  &HandleCount,
+                  &HandleBuffer
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  for (Index = 0; Index < HandleCount; Index++) {
+    Status = gBS->HandleProtocol (
+                    HandleBuffer[Index],
+                    &gEfiBlockIoProtocolGuid,
+                    (VOID**) &(*block_io)
+                    );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    if (((*block_io)->Media->LogicalPartition) || ((*block_io)->Media->RemovableMedia) ||
+        !(*block_io)->Media->MediaPresent) {
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (
+                    HandleBuffer[Index],
+                    &gEfiDiskIoProtocolGuid,
+                    (VOID**) &(*disk_io)
+                    );
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (
+                    HandleBuffer[Index],
+                    &gEfiDevicePathProtocolGuid,
+                    (VOID **) &DevicePath
+                    );
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+
+    if (!CompareMem (DevicePath, init_path, DEVICE_PATH_SIZE (init_path))) {
+      init_path = DevicePath;
+      break;
+    }
+  }
+
+  if (Index >= HandleCount) {
+    Print (L"Failed to find boot device.\n");
+    *io_path = NULL;
+    return EFI_DEVICE_ERROR;
+  }
+
+  if (HandleBuffer != NULL) {
+    FreePool (HandleBuffer);
+    HandleBuffer = NULL;
+  }
+
+  *io_path = DuplicateDevicePath (init_path);
+
+  Status = (*block_io)->ReadBlocks (
+                          (*block_io),
+                          (*block_io)->Media->MediaId,
+                          1,
+                          sizeof(GPTHeader),
+                          &gpt_header
+                          );
+  if (EFI_ERROR(Status)) {
+    avb_error("ReadBlocks, Block Media error.\n");
+    return Status;
+  }
+
+  Status = validate_gpt(&gpt_header);
+  if (EFI_ERROR(Status)) {
+    avb_error("Invalid GPTHeader\n");
+    return Status;
+  }
+
+  return EFI_SUCCESS;
 }
 
 static AvbIOResult validate_vbmeta_public_key(
