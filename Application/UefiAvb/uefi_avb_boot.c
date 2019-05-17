@@ -81,6 +81,15 @@ struct SetupHeader {
 } /* __attribute__((packed)) */;
 #pragma pack()
 
+VOID
+EFIAPI
+JumpToUefiKernel (
+  EFI_HANDLE ImageHandle,
+  EFI_SYSTEM_TABLE *SystemTable,
+  VOID *KernelBootParams,
+  VOID *KernelStart
+  );
+
 #ifdef __x86_64__
 typedef VOID (*handover_f)(VOID* image,
                            EFI_SYSTEM_TABLE* table,
@@ -175,16 +184,19 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
   }
 
   /* The kernel has to be in its own specific memory pool. */
-  err = uefi_call_wrapper(BS->AllocatePool,
-                          NUM_ARGS_ALLOCATE_POOL,
+  addr = BASE_1GB;
+  err = uefi_call_wrapper(BS->AllocatePages,
+                          4,
+                          AllocateMaxAddress,
                           EfiLoaderCode,
-                          header->kernel_size,
-                          (VOID **)&kernel_buf);
+                          EFI_SIZE_TO_PAGES(header->kernel_size),
+                          &addr);
   if (EFI_ERROR(err)) {
     avb_error("Could not allocate kernel buffer.\n");
     ret = UEFI_AVB_BOOT_KERNEL_RESULT_ERROR_OOM;
     goto out;
   }
+  kernel_buf = (UINT8 *)(UINTN)addr;
   avb_memcpy(kernel_buf, boot->data + header->page_size, header->kernel_size);
 
   /* Ditto for the initrd. */
@@ -218,16 +230,15 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
   }
   cmdline_utf8_len =
       cmdline_first_len + 1 + cmdline_second_len + 1 + cmdline_extra_len;
-  err = uefi_call_wrapper(BS->AllocatePool,
-                          NUM_ARGS_ALLOCATE_POOL,
-                          EfiLoaderCode,
-                          cmdline_utf8_len,
-                          (VOID **)&cmdline_utf8);
+  addr = 0xA0000;
+  err = uefi_call_wrapper(BS->AllocatePages, 4, AllocateMaxAddress, EfiLoaderData,
+                                        EFI_SIZE_TO_PAGES(cmdline_utf8_len), &addr);
   if (EFI_ERROR(err)) {
     avb_error("Could not allocate kernel cmdline.\n");
     ret = UEFI_AVB_BOOT_KERNEL_RESULT_ERROR_OOM;
     goto out;
   }
+  cmdline_utf8 = (UINT8 *)(UINTN)addr;
   offset = 0;
   avb_memcpy(cmdline_utf8, header->cmdline, cmdline_first_len);
   offset += cmdline_first_len;
@@ -288,7 +299,8 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
   setup->ramdisk_len = (UINT32)(UINTN)initramfs_size;
 
   /* Jump to the kernel. */
-  linux_efi_handover(efi_image_handle, setup);
+  // linux_efi_handover(efi_image_handle, setup);
+  JumpToUefiKernel ((VOID *)gImageHandle, (VOID *) gST, setup, (VOID *) (UINTN) (setup->code32_start));
 
   ret = UEFI_AVB_BOOT_KERNEL_RESULT_ERROR_START_KERNEL;
 out:
