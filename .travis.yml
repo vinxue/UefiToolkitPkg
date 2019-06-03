@@ -1,7 +1,7 @@
 language: c
 
 before_install:
- - chmod +x build.sh
+- chmod +x build.sh
 
 matrix:
   include:
@@ -11,4 +11,3 @@ matrix:
 
     script:
     - "./build.sh"
- 

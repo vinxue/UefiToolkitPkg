@@ -12,7 +12,7 @@ pool:
 steps:
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '2.7.14'
+    versionSpec: '2.7.16'
     architecture: 'x64'
 
 - script: |
@@ -20,7 +20,7 @@ steps:
     git clone https://github.com/tianocore/edk2 -b UDK2018
     move /Y ..\UefiPkg edk2
     cd edk2
-    set PYTHON_HOME=C:\hostedtoolcache\windows\Python\2.7.14\x64
+    set PYTHON_HOME=C:\hostedtoolcache\windows\Python\2.7.16\x64
     set NASM_PREFIX=%cd%\UefiPkg\Tools\Nasm\
     edksetup.bat rebuild && build -p UefiPkg\UefiPkg.dsc -a X64 -t VS2017 -b RELEASE
   displayName: 'Run a build script'
