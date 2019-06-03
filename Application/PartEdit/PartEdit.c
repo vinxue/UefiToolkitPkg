@@ -27,10 +27,99 @@ typedef struct {
   EFI_HANDLE  PartitionHandle;
 } PARTITION_LIST;
 
+typedef struct {
+  EFI_DEVICE_PATH_PROTOCOL  *ParentDevicePath;
+  EFI_BLOCK_IO_PROTOCOL     *BlockIo;
+  EFI_DISK_IO_PROTOCOL      *DiskIo;
+} PARTITON_DATA;
+
 STATIC CONST CHAR8 Hex[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 LIST_ENTRY mPartitionListHead;
-STATIC EFI_DEVICE_PATH_PROTOCOL  *mDiskDevicePath;
+EFI_DEVICE_PATH_PROTOCOL  *mDiskDevicePath;
+PARTITON_DATA             *mPartData;
+
+EFI_STATUS
+EFIAPI
+InitDevicePath (
+  VOID
+  )
+{
+  EFI_STATUS                Status;
+  UINT8                     Index;
+  UINTN                     HandleCount;
+  EFI_HANDLE                *HandleBuffer;
+  EFI_BLOCK_IO_PROTOCOL     *BlockIo;
+  EFI_DISK_IO_PROTOCOL      *DiskIo;
+  EFI_DEVICE_PATH_PROTOCOL  *DevicePath;
+
+  //
+  // Locate all the BlockIo protocol
+  //
+  Status = gBS->LocateHandleBuffer (
+                  ByProtocol,
+                  &gEfiBlockIoProtocolGuid,
+                  NULL,
+                  &HandleCount,
+                  &HandleBuffer
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  for (Index = 0; Index < HandleCount; Index++) {
+    Status = gBS->HandleProtocol (
+                    HandleBuffer[Index],
+                    &gEfiBlockIoProtocolGuid,
+                    (VOID **) &BlockIo
+                    );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    Status = gBS->HandleProtocol (
+                    HandleBuffer[Index],
+                    &gEfiDiskIoProtocolGuid,
+                    (VOID **) &DiskIo
+                    );
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+
+    if ((BlockIo->Media->LogicalPartition) || (BlockIo->Media->RemovableMedia)) {
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (
+                    HandleBuffer[Index],
+                    &gEfiDevicePathProtocolGuid,
+                    (VOID **) &DevicePath
+                    );
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+
+    break;
+  }
+
+  if (Index >= HandleCount) {
+    Print (L"Failed to find boot device.\n");
+    return EFI_DEVICE_ERROR;
+  }
+
+  if (HandleBuffer != NULL) {
+    FreePool (HandleBuffer);
+    HandleBuffer = NULL;
+  }
+
+  mDiskDevicePath = DuplicateDevicePath (DevicePath);
+
+  mPartData->BlockIo          = BlockIo;
+  mPartData->DiskIo           = DiskIo;
+  mPartData->ParentDevicePath = mDiskDevicePath;
+
+  return EFI_SUCCESS;
+}
 
 /*
   Helper to free the partition list
@@ -117,76 +206,6 @@ ReadPartitionEntries (
   }
 
   return Status;
-}
-
-EFI_STATUS
-EFIAPI
-InitDevicePath (
-  VOID
-  )
-{
-  EFI_STATUS                Status;
-  UINT8                     Index;
-  UINTN                     HandleCount;
-  EFI_HANDLE                *HandleBuffer;
-  EFI_BLOCK_IO_PROTOCOL     *BlockIo;
-  EFI_DEVICE_PATH_PROTOCOL   *DevicePath;
-
-  //
-  // Locate all the BlockIo protocol
-  //
-  Status = gBS->LocateHandleBuffer (
-                  ByProtocol,
-                  &gEfiBlockIoProtocolGuid,
-                  NULL,
-                  &HandleCount,
-                  &HandleBuffer
-                  );
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  for (Index = 0; Index < HandleCount; Index++) {
-    Status = gBS->HandleProtocol (
-                    HandleBuffer[Index],
-                    &gEfiBlockIoProtocolGuid,
-                    (VOID **) &BlockIo
-                    );
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-
-    if ((BlockIo->Media->LogicalPartition) || (BlockIo->Media->RemovableMedia)) {
-      continue;
-    }
-
-    Status = gBS->HandleProtocol (
-                    HandleBuffer[Index],
-                    &gEfiDevicePathProtocolGuid,
-                    (VOID **) &DevicePath
-                    );
-    if (EFI_ERROR (Status)) {
-      continue;
-    }
-
-    break;
-  }
-
-  if (Index >= HandleCount) {
-    Print (L"Failed to find boot device.\n");
-    return EFI_DEVICE_ERROR;
-  }
-
-  if (HandleBuffer != NULL) {
-    FreePool (HandleBuffer);
-    HandleBuffer = NULL;
-  }
-
-  mDiskDevicePath = DuplicateDevicePath (DevicePath);
-
-  Print (L"%s\n", ConvertDevicePathToText (mDiskDevicePath, FALSE, FALSE));
-
-  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -318,11 +337,8 @@ InitDiskPartition (
       CopyMem (
         Entry->PartitionName,
         PartitionEntries[PartitionNode->PartitionNumber - 1].PartitionName, // Partition numbers start from 1.
-        PARTITION_NAME_MAX_LENGTH
+        PARTITION_NAME_MAX_LENGTH * 2
         );
-
-      Print (L"BLK%d: %s\n", PartitionNode->PartitionNumber, PartitionEntries[PartitionNode->PartitionNumber - 1].PartitionName);
-      Print (L"%s\n\n", ConvertDevicePathToText (DevicePath, FALSE, FALSE));
 
       InsertTailList (&mPartitionListHead, &Entry->Link);
 
@@ -429,6 +445,8 @@ ReadPartition (
   // Check read partition size will fit on device.
   //
   PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+  Print (L"LastBlock: 0x%x\n", BlockIo->Media->LastBlock);
+  Print (L"Partition: %a size: 0x%x\n", PartitionName, PartitionSize);
   if (PartitionSize < BufferSize) {
     DEBUG ((EFI_D_ERROR, "Partition not big enough.\n"));
     DEBUG ((EFI_D_ERROR, "Partition Size: %d\nImage Size: %d\n",  PartitionSize, BufferSize));
@@ -534,11 +552,59 @@ DumpHex (
 
 VOID
 EFIAPI
-ShowHelpInfo(
+DumpParentDevice (
+  VOID
+  )
+{
+  EFI_STATUS                 Status;
+  PARTITION_LIST             *Entry;
+  PARTITION_LIST             *NextEntry;
+  EFI_DEVICE_PATH_PROTOCOL   *DevicePath;
+
+  Entry = (PARTITION_LIST *) GetFirstNode (&mPartitionListHead);
+  while (!IsNull (&mPartitionListHead, &Entry->Link)) {
+    Status = gBS->OpenProtocol (
+                    Entry->PartitionHandle,
+                    &gEfiDevicePathProtocolGuid,
+                    (VOID **) &DevicePath,
+                    gImageHandle,
+                    NULL,
+                    EFI_OPEN_PROTOCOL_GET_PROTOCOL
+                    );
+    if (EFI_ERROR (Status)) {
+      Print (L"Get device path failed: %r\n", Status);
+    }
+
+    Print (L"PartitionName: %s\n", Entry->PartitionName);
+    Print (L"%s\n\n", ConvertDevicePathToText (DevicePath, FALSE, FALSE));
+
+    NextEntry = (PARTITION_LIST *) GetNextNode (&mPartitionListHead, &Entry->Link);
+    Entry = NextEntry;
+  }
+
+  Print (L"%s\n", ConvertDevicePathToText (mPartData->ParentDevicePath, FALSE, FALSE));
+  Print (L"MediaId         : %d\n", mPartData->BlockIo->Media->MediaId);
+  Print (L"RemovableMedia  : %d\n", mPartData->BlockIo->Media->RemovableMedia);
+  Print (L"MediaPresent    : %d\n", mPartData->BlockIo->Media->MediaPresent);
+  Print (L"LogicalPartition: %d\n", mPartData->BlockIo->Media->LogicalPartition);
+  Print (L"ReadOnly        : %d\n", mPartData->BlockIo->Media->ReadOnly);
+  Print (L"WriteCaching    : %d\n", mPartData->BlockIo->Media->WriteCaching);
+  Print (L"BlockSize       : 0x%x\n", mPartData->BlockIo->Media->BlockSize);
+  Print (L"IoAlign         : 0x%x\n", mPartData->BlockIo->Media->IoAlign);
+  Print (L"LastBlock       : 0x%x\n", mPartData->BlockIo->Media->LastBlock);
+  Print (L"LowestAlignedLba: 0x%x\n", mPartData->BlockIo->Media->LowestAlignedLba);
+  Print (L"LogicalBlocksPerPhysicalBlock   : 0x%x\n", mPartData->BlockIo->Media->LogicalBlocksPerPhysicalBlock);
+  Print (L"OptimalTransferLengthGranularity: 0x%x\n", mPartData->BlockIo->Media->OptimalTransferLengthGranularity);
+}
+
+VOID
+EFIAPI
+ShowHelpInfo (
   VOID
   )
 {
   Print (L"Help info:\n");
+  Print (L"  DiskBlock.efi -d (Dump parent disk info.)\n");
   Print (L"  DiskBlock.efi read partname offset size\n\n");
 }
 
@@ -574,6 +640,12 @@ ShellAppMain (
     return EFI_INVALID_PARAMETER;
   }
 
+  mPartData = AllocateZeroPool (sizeof (PARTITON_DATA));
+  if (mPartData == NULL) {
+    DEBUG ((DEBUG_ERROR, "Fail to allocate the partition data.\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
   Status = InitDevicePath ();
   if (EFI_ERROR (Status)) {
     return Status;
@@ -582,6 +654,13 @@ ShellAppMain (
   Status = InitDiskPartition ();
   if (EFI_ERROR (Status)) {
     return Status;
+  }
+
+  if (Argc == 2) {
+    if ((!StrCmp (Argv[1], L"-d")) || (!StrCmp (Argv[1], L"/d"))) {
+      DumpParentDevice ();
+      return EFI_SUCCESS;
+    }
   }
 
   if (Argc == 5) {
