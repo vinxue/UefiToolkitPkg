@@ -401,7 +401,7 @@ OpenPartition (
                   EFI_OPEN_PROTOCOL_GET_PROTOCOL
                   );
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "Couldn't open Block IO for flash: %r\n", Status));
+    DEBUG ((EFI_D_ERROR, "Couldn't open Block IO for disk: %r\n", Status));
     return Status;
   }
 
@@ -414,7 +414,7 @@ OpenPartition (
                   EFI_OPEN_PROTOCOL_GET_PROTOCOL
                   );
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "Couldn't open Disk IO for flash: %r\n", Status));
+    DEBUG ((EFI_D_ERROR, "Couldn't open Disk IO for disk: %r\n", Status));
     return Status;
   }
 
@@ -604,8 +604,8 @@ ShowHelpInfo (
   )
 {
   Print (L"Help info:\n");
-  Print (L"  DiskBlock.efi -d (Dump parent disk info.)\n");
-  Print (L"  DiskBlock.efi read partname offset size\n\n");
+  Print (L"  PartEdit.efi -d (Dump parent disk info.)\n");
+  Print (L"  PartEdit.efi read partname offset size\n\n");
 }
 
 /**
@@ -615,8 +615,8 @@ standard C main function.
 The ShellCEntryLib library instance wrappers the actual UEFI application
 entry point and calls this ShellAppMain function.
 
-@param  ImageHandle  The image handle of the UEFI Application.
-@param  SystemTable  A pointer to the EFI System Table.
+@param[in]  Argc  The number of parameters.
+@param[in]  Argv  The array of pointers to parameters.
 
 @retval  0               The application exited normally.
 @retval  Other           An error occurred.

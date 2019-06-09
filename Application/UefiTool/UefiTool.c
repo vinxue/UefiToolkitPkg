@@ -438,8 +438,8 @@ standard C main function.
 The ShellCEntryLib library instance wrappers the actual UEFI application
 entry point and calls this ShellAppMain function.
 
-@param  ImageHandle  The image handle of the UEFI Application.
-@param  SystemTable  A pointer to the EFI System Table.
+@param[in]  Argc  The number of parameters.
+@param[in]  Argv  The array of pointers to parameters.
 
 @retval  0               The application exited normally.
 @retval  Other           An error occurred.
