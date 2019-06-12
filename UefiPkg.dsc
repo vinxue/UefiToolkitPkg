@@ -52,6 +52,7 @@
   OemHookStatusCodeLib|MdeModulePkg/Library/OemHookStatusCodeLibNull/OemHookStatusCodeLibNull.inf
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
+  RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
 
   PlatformFlashAccessLib|UefiPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
 
@@ -70,6 +71,7 @@
   UefiPkg/Application/PartEdit/PartEdit.inf
   UefiPkg/Application/FlashTool/FlashTool.inf
   UefiPkg/Application/UefiAvb/UefiAvb.inf
+  UefiPkg/Application/GptGen/GptGen.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
