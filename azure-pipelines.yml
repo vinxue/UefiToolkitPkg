@@ -6,16 +6,35 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'vs2017-win2016'
+jobs:
+- job: WindowsBuild
+  pool:
+    vmImage: 'vs2017-win2016'
 
-steps:
-- script: |
-    xcopy /s /y %cd% ..\UefiPkg\
-    git clone https://github.com/tianocore/edk2 -b UDK2018
-    move /Y ..\UefiPkg edk2
-    cd edk2
-    set PYTHON_HOME=C:\Python27amd64
-    set NASM_PREFIX=%cd%\UefiPkg\Tools\Nasm\
-    edksetup.bat rebuild && build -p UefiPkg\UefiPkg.dsc -a X64 -t VS2017 -b RELEASE
-  displayName: 'Run a build script'
+  steps:
+  - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+    path: UefiPkg
+
+  - script: |
+      cd..
+      git clone https://github.com/tianocore/edk2 -b UDK2018
+      move /y UefiPkg edk2
+      cd edk2
+      set PYTHON_HOME=C:\Python27amd64
+      set NASM_PREFIX=%cd%\UefiPkg\Tools\Nasm\
+      edksetup.bat rebuild
+      build -p UefiPkg\UefiPkg.dsc -a X64 -t VS2017 -b RELEASE
+    displayName: 'Run a Windows build script'
+
+- job: LinuxBuild
+  pool:
+    vmImage: 'ubuntu-16.04'
+
+  steps:
+  - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
+    path: UefiPkg
+
+  - script: |
+      chmod +x build.sh
+      ./build.sh
+    displayName: 'Run a Linux build script'
