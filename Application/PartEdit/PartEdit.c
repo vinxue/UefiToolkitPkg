@@ -39,6 +39,95 @@ LIST_ENTRY mPartitionListHead;
 EFI_DEVICE_PATH_PROTOCOL  *mDiskDevicePath;
 PARTITON_DATA             *mPartData;
 
+
+//
+// Sparse format support
+//
+#define SPARSE_HEADER_MAGIC         0xED26FF3A
+#define CHUNK_TYPE_RAW              0xCAC1
+#define CHUNK_TYPE_FILL             0xCAC2
+#define CHUNK_TYPE_DONT_CARE        0xCAC3
+#define CHUNK_TYPE_CRC32            0xCAC4
+
+#define FILL_BUF_SIZE               (16 * 1024 * 1024)
+#define SPARSE_BLOCK_SIZE           4096
+
+typedef struct {
+  UINT32       Magic;
+  UINT16       MajorVersion;
+  UINT16       MinorVersion;
+  UINT16       FileHeaderSize;
+  UINT16       ChunkHeaderSize;
+  UINT32       BlockSize;
+  UINT32       TotalBlocks;
+  UINT32       TotalChunks;
+  UINT32       ImageChecksum;
+} SPARSE_HEADER;
+
+typedef struct {
+  UINT16       ChunkType;
+  UINT16       Reserved1;
+  UINT32       ChunkSize;
+  UINT32       TotalSize;
+} CHUNK_HEADER;
+
+EFI_STATUS
+EFIAPI
+ReadFileFromDisk (
+  IN  CHAR16               *FileName,
+  OUT  UINTN               *BufferSize,
+  OUT  VOID                **Buffer
+  )
+{
+  EFI_STATUS           Status;
+  SHELL_FILE_HANDLE    FileHandle;
+  UINTN                FileSize;
+  VOID                 *FileBuffer;
+
+  Status = ShellOpenFileByName (FileName, &FileHandle, EFI_FILE_MODE_READ, 0);
+	if (EFI_ERROR (Status)) {
+    Print (L"Open file failed: %r\n", Status);
+    return Status;
+  }
+
+  Status = ShellGetFileSize (FileHandle, &FileSize);
+  if (EFI_ERROR (Status)) {
+    Print (L"Failed to read file size, Status: %r\n", Status);
+    if (FileHandle != NULL) {
+      ShellCloseFile (&FileHandle);
+    }
+    return Status;
+  }
+
+  FileBuffer = AllocateZeroPool (FileSize);
+  if (FileBuffer == NULL) {
+    Print (L"Allocate resouce failed\n");
+    if (FileHandle != NULL) {
+      ShellCloseFile (&FileHandle);
+    }
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = ShellReadFile (FileHandle, &FileSize, FileBuffer);
+  if (EFI_ERROR (Status)) {
+    Print (L"Failed to read file, Status: %r\n", Status);
+    if (FileHandle != NULL) {
+      ShellCloseFile (&FileHandle);
+    }
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+    }
+    return Status;
+  }
+
+  ShellCloseFile (&FileHandle);
+
+  *BufferSize = FileSize;
+  *Buffer     = FileBuffer;
+
+  return EFI_SUCCESS;
+}
+
 BOOLEAN
 EFIAPI
 IsUsbDevice (
@@ -479,8 +568,6 @@ ReadPartition (
   // Check read partition size will fit on device.
   //
   PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
-  Print (L"LastBlock: 0x%x\n", BlockIo->Media->LastBlock);
-  Print (L"Partition: %a size: 0x%x\n", PartitionName, PartitionSize);
   if (PartitionSize < BufferSize) {
     DEBUG ((EFI_D_ERROR, "Partition not big enough.\n"));
     DEBUG ((EFI_D_ERROR, "Partition Size: %d\nImage Size: %d\n",  PartitionSize, BufferSize));
@@ -515,6 +602,7 @@ WritePartition (
 
   Status = OpenPartition (PartitionName, &BlockIo, &DiskIo);
   if (EFI_ERROR (Status)) {
+
     return Status;
   }
 
@@ -631,6 +719,144 @@ DumpParentDevice (
   Print (L"OptimalTransferLengthGranularity: 0x%x\n", mPartData->BlockIo->Media->OptimalTransferLengthGranularity);
 }
 
+EFI_STATUS
+EFIAPI
+FlashSparseImage (
+  IN CHAR8         *PartitionName,
+  IN SPARSE_HEADER *SparseHeader
+  )
+{
+  EFI_STATUS        Status;
+  UINTN             Chunk;
+  UINTN             Offset;
+  UINTN             Left;
+  UINTN             Count;
+  UINTN             FillBufSize;
+  UINT8             *Image;
+  CHUNK_HEADER      *ChunkHeader;
+  VOID              *FillBuf;
+
+  Status = EFI_SUCCESS;
+  Offset = 0;
+
+  Image = (UINT8 *)SparseHeader;
+  Image += SparseHeader->FileHeaderSize;
+
+  //
+  // Allocate the fill buffer
+  //
+  FillBufSize = FILL_BUF_SIZE;
+  FillBuf = AllocatePool (FillBufSize);
+  if (FillBuf == NULL) {
+    DEBUG ((DEBUG_ERROR, "Fail to allocate the fill buffer.\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  for (Chunk = 0; Chunk < SparseHeader->TotalChunks; Chunk++) {
+    ChunkHeader = (CHUNK_HEADER *)Image;
+    DEBUG ((DEBUG_INFO,
+      "Chunk #%d - Type: 0x%x Size: %d TotalSize: 0x%lx Offset 0x%lx\n",
+      (Chunk + 1),
+      ChunkHeader->ChunkType,
+      ChunkHeader->ChunkSize,
+      ChunkHeader->TotalSize,
+      Offset
+      ));
+
+    Image += sizeof (CHUNK_HEADER);
+
+    switch (ChunkHeader->ChunkType) {
+    case CHUNK_TYPE_RAW:
+      Status = WritePartition (
+                 PartitionName,
+                 Offset,
+                 Image,
+                 ChunkHeader->ChunkSize * SparseHeader->BlockSize
+                 );
+      if (EFI_ERROR (Status)) {
+        FreePool (FillBuf);
+        return Status;
+      }
+      Image += (UINTN)ChunkHeader->ChunkSize * SparseHeader->BlockSize;
+      Offset += (UINTN)ChunkHeader->ChunkSize * SparseHeader->BlockSize;
+      break;
+    case CHUNK_TYPE_FILL:
+      Left = (UINTN)ChunkHeader->ChunkSize * SparseHeader->BlockSize;
+      while (Left > 0) {
+        if (Left > FILL_BUF_SIZE) {
+          Count = FILL_BUF_SIZE;
+        } else {
+          Count = Left;
+        }
+        SetMem32 (FillBuf, Count, *(UINT32 *)Image);
+        Status = WritePartition (
+                 PartitionName,
+                 Offset,
+                 FillBuf,
+                 Count
+                 );
+        if (EFI_ERROR (Status)) {
+          FreePool (FillBuf);
+          return Status;
+        }
+        Offset += Count;
+        Left = Left - Count;
+      }
+      Image += sizeof (UINT32);
+      break;
+    case CHUNK_TYPE_DONT_CARE:
+      Offset += (UINTN)ChunkHeader->ChunkSize * SparseHeader->BlockSize;
+      break;
+    default:
+      Print (L"Unsupported Chunk Type:0x%x\n", ChunkHeader->ChunkType);
+      break;
+    }
+  }
+
+  FreePool (FillBuf);
+  return Status;
+}
+
+EFI_STATUS
+EFIAPI
+FlashPartition (
+  IN CHAR8     *PartitionName,
+  IN UINTN     BufferSize,
+  IN VOID      *Buffer
+  )
+{
+  EFI_STATUS          Status;
+  SPARSE_HEADER       *SparseHeader;
+
+  if (Buffer == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  SparseHeader = (SPARSE_HEADER *) Buffer;
+  if (SparseHeader->Magic == SPARSE_HEADER_MAGIC) {
+    DEBUG ((DEBUG_INFO, "Sparse Magic: 0x%x\n", SparseHeader->Magic));
+    DEBUG ((DEBUG_INFO, "Major: %d, Minor: %d\n", SparseHeader->MajorVersion, SparseHeader->MinorVersion));
+    DEBUG ((DEBUG_INFO, "FileHeaderSize: %d, ChunkHeaderSize: %d\n", SparseHeader->FileHeaderSize, SparseHeader->ChunkHeaderSize));
+    DEBUG ((DEBUG_INFO, "BlockSize: %d, TotalBlocks: %d\n", SparseHeader->BlockSize, SparseHeader->TotalBlocks));
+    DEBUG ((DEBUG_INFO, "TotalChunks: %d, ImageChecksum: %d\n", SparseHeader->TotalChunks, SparseHeader->ImageChecksum));
+
+    if (SparseHeader->MajorVersion != 1) {
+      DEBUG ((DEBUG_ERROR, "Sparse image version %d.%d not supported.\n", SparseHeader->MajorVersion, SparseHeader->MinorVersion));
+      return EFI_INVALID_PARAMETER;
+    }
+    Status = FlashSparseImage (PartitionName, SparseHeader);
+  } else {
+    Status = WritePartition (
+               PartitionName,
+               0,
+               Buffer,
+               BufferSize
+               );
+  }
+
+  return Status;
+}
+
 VOID
 EFIAPI
 ShowHelpInfo (
@@ -639,7 +865,8 @@ ShowHelpInfo (
 {
   Print (L"Help info:\n");
   Print (L"  PartEdit.efi -d (Dump parent disk info.)\n");
-  Print (L"  PartEdit.efi read partname offset size\n\n");
+  Print (L"  PartEdit.efi read partname offset size\n");
+  Print (L"  PartEdit.efi flash partname filename\n\n");
 }
 
 /**
@@ -694,6 +921,40 @@ ShellAppMain (
     if ((!StrCmp (Argv[1], L"-d")) || (!StrCmp (Argv[1], L"/d"))) {
       DumpParentDevice ();
       return EFI_SUCCESS;
+    }
+  }
+
+  //
+  // Flash a binary to a partition
+  //
+  if (Argc == 4) {
+    if ((!StrCmp (Argv[1], L"flash")) || (!StrCmp (Argv[1], L"FLASH"))) {
+      UnicodeStrToAsciiStrS (Argv[2], PartitionName, ARRAY_SIZE (PartitionName));
+
+      Status = ReadFileFromDisk (Argv[3], &BufferSize, &Buffer);
+      if (EFI_ERROR (Status)) {
+        Print (L"Read flash file failed. %r\n", Status);
+        return Status;
+      }
+
+      Status = FlashPartition (PartitionName, BufferSize, Buffer);
+      if (EFI_ERROR (Status)) {
+        Print (L"Flash partition %a failed: %r\n", PartitionName, Status);
+      } else {
+        Print (L"Flash partition %a passed: %r\n", PartitionName, Status);
+      }
+
+      if (Buffer != NULL) {
+        FreePool (Buffer);
+        Buffer = NULL;
+      }
+
+      if (mPartData != NULL) {
+        FreePool (mPartData);
+        mPartData = NULL;
+      }
+
+      return Status;
     }
   }
 
