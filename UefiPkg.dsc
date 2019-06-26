@@ -72,6 +72,7 @@
   UefiPkg/Application/FlashTool/FlashTool.inf
   UefiPkg/Application/UefiAvb/UefiAvb.inf
   UefiPkg/Application/GptGen/GptGen.inf
+  UefiPkg/Application/CpuFreq/CpuFreq.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
