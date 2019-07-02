@@ -857,6 +857,48 @@ FlashPartition (
   return Status;
 }
 
+EFI_STATUS
+EFIAPI
+EraseGptTable (
+  VOID
+  )
+{
+  EFI_STATUS            Status;
+  VOID                  *Buffer;
+  UINTN                 BufferSize;
+  UINT32                BlockSize;
+
+  if (mPartData == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  BlockSize = mPartData->BlockIo->Media->BlockSize;
+
+  BufferSize = 2 * BlockSize + MAX_GPT_ENTRIES * GPT_ENTRY_SIZE;
+  Buffer = AllocateZeroPool (BufferSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = mPartData->DiskIo->WriteDisk (
+            mPartData->DiskIo,
+            mPartData->BlockIo->Media->MediaId,
+            0,
+            BufferSize,
+            Buffer
+            );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
+  }
+
+  return Status;
+}
+
 VOID
 EFIAPI
 ShowHelpInfo (
@@ -866,7 +908,8 @@ ShowHelpInfo (
   Print (L"Help info:\n");
   Print (L"  PartEdit.efi -d (Dump parent disk info.)\n");
   Print (L"  PartEdit.efi read partname offset size\n");
-  Print (L"  PartEdit.efi flash partname filename\n\n");
+  Print (L"  PartEdit.efi flash partname filename\n");
+  Print (L"  PartEdit.efi reset (Erase GPT table)\n\n");
 }
 
 /**
@@ -918,10 +961,28 @@ ShellAppMain (
   }
 
   if (Argc == 2) {
+    //
+    // Dump parent disk information.
+    //
     if ((!StrCmp (Argv[1], L"-d")) || (!StrCmp (Argv[1], L"/d"))) {
       DumpParentDevice ();
       return EFI_SUCCESS;
     }
+
+    //
+    // Erase GPT table.
+    //
+    if ((!StrCmp (Argv[1], L"reset")) || (!StrCmp (Argv[1], L"RESET"))) {
+      Status = EraseGptTable ();
+      if (EFI_ERROR (Status)) {
+        Print (L"Erase GPT table failed: %r\n", Status);
+        return Status;
+      }
+
+      Print (L"Erase GPT table passed.\n");
+      return EFI_SUCCESS;
+    }
+
   }
 
   //

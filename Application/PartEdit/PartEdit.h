@@ -28,4 +28,7 @@
 #include <Protocol/BlockIo.h>
 #include <Protocol/DiskIo.h>
 
+#define MAX_GPT_ENTRIES           128
+#define GPT_ENTRY_SIZE            128
+
 #endif
