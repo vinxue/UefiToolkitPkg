@@ -128,6 +128,35 @@ ReadFileFromDisk (
   return EFI_SUCCESS;
 }
 
+EFI_STATUS
+EFIAPI
+SaveFileToDisk (
+  IN  CHAR16              *FileName,
+  IN  UINTN               BufferSize,
+  IN  VOID                *Buffer
+  )
+{
+  EFI_STATUS           Status;
+  SHELL_FILE_HANDLE    FileHandle;
+
+  Status = ShellOpenFileByName (FileName, &FileHandle, EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE, 0);
+  if (EFI_ERROR (Status)) {
+    Print (L"Open file failed: %r\n", Status);
+    return Status;
+  }
+
+  Status = ShellWriteFile (FileHandle, &BufferSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    Print (L"Write file failed: %r\n", Status);
+    ShellCloseFile (&FileHandle);
+    return Status;
+  }
+
+  ShellCloseFile (&FileHandle);
+
+  return EFI_SUCCESS;
+}
+
 BOOLEAN
 EFIAPI
 IsUsbDevice (
@@ -860,7 +889,7 @@ FlashPartition (
 EFI_STATUS
 EFIAPI
 EraseGptTable (
-  VOID
+  IN PARTITON_DATA          *PartData
   )
 {
   EFI_STATUS            Status;
@@ -868,11 +897,11 @@ EraseGptTable (
   UINTN                 BufferSize;
   UINT32                BlockSize;
 
-  if (mPartData == NULL) {
+  if (PartData == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  BlockSize = mPartData->BlockIo->Media->BlockSize;
+  BlockSize = PartData->BlockIo->Media->BlockSize;
 
   BufferSize = 2 * BlockSize + MAX_GPT_ENTRIES * GPT_ENTRY_SIZE;
   Buffer = AllocateZeroPool (BufferSize);
@@ -880,14 +909,67 @@ EraseGptTable (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  Status = mPartData->DiskIo->WriteDisk (
-            mPartData->DiskIo,
-            mPartData->BlockIo->Media->MediaId,
-            0,
-            BufferSize,
-            Buffer
-            );
+  Status = PartData->DiskIo->WriteDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             0,
+             BufferSize,
+             Buffer
+             );
   if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
+  }
+
+  return Status;
+}
+
+EFI_STATUS
+EFIAPI
+SaveDiskData (
+  IN PARTITON_DATA          *PartData,
+  IN CHAR16                 *FileName,
+  IN UINTN                  Offset,
+  IN UINTN                  BufferSize
+  )
+{
+  EFI_STATUS          Status;
+  VOID                *Buffer;
+
+  if (PartData == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Buffer = AllocateZeroPool (BufferSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = PartData->DiskIo->ReadDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             Offset,
+             BufferSize,
+             Buffer
+             );
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  Status = SaveFileToDisk (FileName, BufferSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
     return Status;
   }
 
@@ -905,11 +987,14 @@ ShowHelpInfo (
   VOID
   )
 {
+  Print (L"\nUEFI Partition Editor. Version: 1.1.0.0.\n");
+  Print (L"Copyright (c) 2019 Gavin Xue. All rights reserved.\n\n");
   Print (L"Help info:\n");
-  Print (L"  PartEdit.efi -d (Dump parent disk info.)\n");
+  Print (L"  PartEdit.efi -d (Dump parent disk info)\n");
   Print (L"  PartEdit.efi read partname offset size\n");
   Print (L"  PartEdit.efi flash partname filename\n");
-  Print (L"  PartEdit.efi reset (Erase GPT table)\n\n");
+  Print (L"  PartEdit.efi reset (Erase GPT table)\n");
+  Print (L"  PartEdit.efi save offset size filename\n\n");
 }
 
 /**
@@ -973,7 +1058,7 @@ ShellAppMain (
     // Erase GPT table.
     //
     if ((!StrCmp (Argv[1], L"reset")) || (!StrCmp (Argv[1], L"RESET"))) {
-      Status = EraseGptTable ();
+      Status = EraseGptTable (mPartData);
       if (EFI_ERROR (Status)) {
         Print (L"Erase GPT table failed: %r\n", Status);
         return Status;
@@ -1020,6 +1105,9 @@ ShellAppMain (
   }
 
   if (Argc == 5) {
+    //
+    // Read data from a given partition name.
+    //
     if ((!StrCmp (Argv[1], L"read")) || (!StrCmp (Argv[1], L"READ"))) {
       UnicodeStrToAsciiStrS (Argv[2], PartitionName, ARRAY_SIZE (PartitionName));
       Offset     = StrHexToUintn (Argv[3]);
@@ -1043,6 +1131,25 @@ ShellAppMain (
         Buffer = NULL;
       }
     }
+
+    //
+    // Save disk data to a file.
+    //
+    if ((!StrCmp (Argv[1], L"save")) || (!StrCmp (Argv[1], L"SAVE"))) {
+      Offset     = StrHexToUintn (Argv[2]);
+      BufferSize = StrHexToUintn (Argv[3]);
+
+      Status = SaveDiskData (mPartData, Argv[4], Offset, BufferSize);
+      if (EFI_ERROR (Status)) {
+        Print (L"Save disk data failed. %r\n", Status);
+        return Status;
+      }
+
+      Print (L"Save disk data passed.\n");
+
+      return EFI_SUCCESS;
+    }
+
   }
 
   return 0;
