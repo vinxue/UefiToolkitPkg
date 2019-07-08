@@ -981,6 +981,56 @@ SaveDiskData (
   return Status;
 }
 
+EFI_STATUS
+EFIAPI
+WriteDataToDisk (
+  IN PARTITON_DATA          *PartData,
+  IN CHAR16                 *FileName,
+  IN UINTN                  Offset,
+  IN UINTN                  Size
+  )
+{
+  EFI_STATUS             Status;
+  VOID                   *Buffer;
+  UINTN                  BufferSize;
+  UINTN                  TempSize;
+
+  TempSize = Size;
+
+  Status = ReadFileFromDisk (FileName, &BufferSize, &Buffer);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  if (Size == 0) {
+    TempSize = BufferSize;
+  }
+
+  Status = PartData->DiskIo->WriteDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             Offset,
+             TempSize,
+             Buffer
+             );
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  PartData->BlockIo->FlushBlocks (PartData->BlockIo);
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
+  }
+
+  return EFI_SUCCESS;
+}
+
 VOID
 EFIAPI
 ShowHelpInfo (
@@ -994,7 +1044,8 @@ ShowHelpInfo (
   Print (L"  PartEdit.efi read partname offset size\n");
   Print (L"  PartEdit.efi flash partname filename\n");
   Print (L"  PartEdit.efi reset (Erase GPT table)\n");
-  Print (L"  PartEdit.efi save offset size filename\n\n");
+  Print (L"  PartEdit.efi save offset size filename\n");
+  Print (L"  PartEdit.efi write offset size filename\n\n");
 }
 
 /**
@@ -1148,6 +1199,22 @@ ShellAppMain (
       Print (L"Save disk data passed.\n");
 
       return EFI_SUCCESS;
+    }
+
+    //
+    // Write a binary to disk
+    //
+    if ((!StrCmp (Argv[1], L"write")) || (!StrCmp (Argv[1], L"WRITE"))) {
+      Offset     = StrHexToUintn (Argv[2]);
+      BufferSize = StrHexToUintn (Argv[3]);
+
+      Status = WriteDataToDisk (mPartData, Argv[4], Offset, BufferSize);
+      if (EFI_ERROR (Status)) {
+        Print (L"Write disk data failed. %r\n", Status);
+        return Status;
+      }
+
+      Print (L"Write disk data passed.\n");
     }
 
   }
