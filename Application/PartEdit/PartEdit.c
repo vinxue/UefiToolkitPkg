@@ -1273,6 +1273,8 @@ ShellAppMain (
         FreePool (Buffer);
         Buffer = NULL;
       }
+
+      return EFI_SUCCESS;
     }
 
     //
@@ -1307,6 +1309,8 @@ ShellAppMain (
       }
 
       Print (L"Write disk data passed.\n");
+
+      return EFI_SUCCESS;
     }
 
   }
