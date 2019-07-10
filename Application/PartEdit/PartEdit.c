@@ -35,9 +35,9 @@ typedef struct {
 
 STATIC CONST CHAR8 Hex[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-LIST_ENTRY mPartitionListHead;
-EFI_DEVICE_PATH_PROTOCOL  *mDiskDevicePath;
-PARTITON_DATA             *mPartData;
+LIST_ENTRY                  mPartitionListHead;
+EFI_DEVICE_PATH_PROTOCOL    *mDiskDevicePath;
+PARTITON_DATA               *mPartData;
 
 
 //
@@ -888,6 +888,80 @@ FlashPartition (
 
 EFI_STATUS
 EFIAPI
+ErasePartition (
+  IN CHAR8                  *PartitionName
+  )
+{
+  EFI_STATUS               Status;
+  EFI_BLOCK_IO_PROTOCOL    *BlockIo;
+  EFI_DISK_IO_PROTOCOL     *DiskIo;
+  UINT32                   MediaId;
+  UINTN                    PartitionSize;
+  VOID                     *FillBuffer;
+  UINTN                    FillBufferSize;
+  UINTN                    Offset;
+  UINTN                    Count;
+
+  Status = OpenPartition (PartitionName, &BlockIo, &DiskIo);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Read partition size.
+  //
+  PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+
+  MediaId = BlockIo->Media->MediaId;
+
+  //
+  // Allocate the fill buffer
+  //
+  FillBufferSize = FILL_BUF_SIZE;
+  FillBuffer = AllocateZeroPool (FillBufferSize);
+  if (FillBuffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Offset = 0;
+
+  while (PartitionSize > 0) {
+    if (PartitionSize > FILL_BUF_SIZE) {
+      Count = FILL_BUF_SIZE;
+    } else {
+      Count = PartitionSize;
+    }
+
+    Status = BlockIo->WriteBlocks (
+              BlockIo,
+              MediaId,
+              0,
+              PartitionSize,
+              FillBuffer
+              );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "Failed to write disk: %r. Offset: 0x%lx.\n", Status, Offset));
+      if (FillBuffer != NULL) {
+        FreePool (FillBuffer);
+      }
+      return Status;
+    }
+
+    PartitionSize -= Count;
+    Offset        += Count;
+  }
+
+  BlockIo->FlushBlocks (BlockIo);
+
+  if (FillBuffer != NULL) {
+    FreePool (FillBuffer);
+  }
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
 EraseGptTable (
   IN PARTITON_DATA          *PartData
   )
@@ -1043,6 +1117,7 @@ ShowHelpInfo (
   Print (L"  PartEdit.efi -d (Dump parent disk info)\n");
   Print (L"  PartEdit.efi read partname offset size\n");
   Print (L"  PartEdit.efi flash partname filename\n");
+  Print (L"  PartEdit.efi erase partname\n");
   Print (L"  PartEdit.efi reset (Erase GPT table)\n");
   Print (L"  PartEdit.efi save offset size filename\n");
   Print (L"  PartEdit.efi write offset size filename\n\n");
@@ -1121,10 +1196,27 @@ ShellAppMain (
 
   }
 
-  //
-  // Flash a binary to a partition
-  //
+   if (Argc == 3) {
+    //
+    // Erase a given partition
+    //
+    if ((!StrCmp (Argv[1], L"erase")) || (!StrCmp (Argv[1], L"ERASE"))) {
+      UnicodeStrToAsciiStrS (Argv[2], PartitionName, ARRAY_SIZE (PartitionName));
+      Status = ErasePartition (PartitionName);
+      if (EFI_ERROR (Status)) {
+        Print (L"Erase partition: %a failed. %r\n", PartitionName, Status);
+        return Status;
+      }
+      Print (L"Erase partition: %a passed.\n", PartitionName);
+      return EFI_SUCCESS;
+    }
+
+   }
+
   if (Argc == 4) {
+    //
+    // Flash a binary to a partition
+    //
     if ((!StrCmp (Argv[1], L"flash")) || (!StrCmp (Argv[1], L"FLASH"))) {
       UnicodeStrToAsciiStrS (Argv[2], PartitionName, ARRAY_SIZE (PartitionName));
 
