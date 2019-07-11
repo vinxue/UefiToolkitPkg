@@ -32,7 +32,8 @@ jobs:
 
   - task: CopyFiles@2
     inputs:
-      contents: 'Build\*.efi'
+      sourceFolder: $(Build.SourcesDirectory)/Build
+      contents: '*.efi'
       targetFolder: $(Build.ArtifactStagingDirectory)
 
   - task: PublishBuildArtifacts@1
