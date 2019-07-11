@@ -27,14 +27,8 @@ jobs:
     displayName: 'Run a Windows build script'
 
   - script:
-      xcopy /y ..\edk2\Build\UefiPkg\RELEASE_VS2017\X64\*.efi Build\
-    displayName: 'Copy build files to SourcesDirectory'
-
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: $(Build.SourcesDirectory)/Build
-      contents: '*.efi'
-      targetFolder: $(Build.ArtifactStagingDirectory)
+      xcopy /y ..\edk2\Build\UefiPkg\RELEASE_VS2017\X64\*.efi $(Build.ArtifactStagingDirectory)\
+    displayName: 'Copy build files to Artifact'
 
   - task: PublishBuildArtifacts@1
     inputs:
