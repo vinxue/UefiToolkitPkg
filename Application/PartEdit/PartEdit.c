@@ -917,7 +917,7 @@ ErasePartition (
   //
   // Allocate the fill buffer
   //
-  FillBufferSize = FILL_BUF_SIZE;
+  FillBufferSize = SIZE_64MB;
   FillBuffer = AllocateZeroPool (FillBufferSize);
   if (FillBuffer == NULL) {
     return EFI_OUT_OF_RESOURCES;
@@ -926,19 +926,19 @@ ErasePartition (
   Offset = 0;
 
   while (PartitionSize > 0) {
-    if (PartitionSize > FILL_BUF_SIZE) {
-      Count = FILL_BUF_SIZE;
+    if (PartitionSize > SIZE_64MB) {
+      Count = SIZE_64MB;
     } else {
       Count = PartitionSize;
     }
 
     Status = BlockIo->WriteBlocks (
-              BlockIo,
-              MediaId,
-              0,
-              PartitionSize,
-              FillBuffer
-              );
+                        BlockIo,
+                        MediaId,
+                        Offset,
+                        PartitionSize,
+                        FillBuffer
+                        );
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "Failed to write disk: %r. Offset: 0x%lx.\n", Status, Offset));
       if (FillBuffer != NULL) {
@@ -948,7 +948,7 @@ ErasePartition (
     }
 
     PartitionSize -= Count;
-    Offset        += Count;
+    Offset        += Count / (BlockIo->Media->BlockSize);
   }
 
   BlockIo->FlushBlocks (BlockIo);
