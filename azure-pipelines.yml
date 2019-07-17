@@ -7,8 +7,8 @@ trigger:
 - master
 
 schedules:
-- cron: "0 0 * * *"
-  displayName: Daily Nightly Build
+- cron: "0 0 * * 0"
+  displayName: Weekly Sunday build
   branches:
     include:
     - master
