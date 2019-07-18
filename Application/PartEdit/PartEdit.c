@@ -610,8 +610,6 @@ ReadPartition (
     return Status;
   }
 
-  BlockIo->FlushBlocks(BlockIo);
-
   return EFI_SUCCESS;
 }
 
@@ -652,7 +650,7 @@ WritePartition (
     return Status;
   }
 
-  BlockIo->FlushBlocks(BlockIo);
+  BlockIo->FlushBlocks (BlockIo);
 
   return EFI_SUCCESS;
 }
@@ -970,14 +968,22 @@ EraseGptTable (
   VOID                  *Buffer;
   UINTN                 BufferSize;
   UINT32                BlockSize;
+  EFI_LBA               LastBlock;
+  UINT64                EntriesSize;
+  EFI_LBA               SecondaryPartitionEntryLBA;
 
   if (PartData == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  BlockSize = PartData->BlockIo->Media->BlockSize;
+  BlockSize   = PartData->BlockIo->Media->BlockSize;
+  LastBlock   = PartData->BlockIo->Media->LastBlock;
+  EntriesSize = MAX_GPT_ENTRIES * GPT_ENTRY_SIZE;
 
-  BufferSize = 2 * BlockSize + MAX_GPT_ENTRIES * GPT_ENTRY_SIZE;
+  //
+  // Erase Primary GPT table.
+  //
+  BufferSize = 2 * BlockSize + EntriesSize;
   Buffer = AllocateZeroPool (BufferSize);
   if (Buffer == NULL) {
     return EFI_OUT_OF_RESOURCES;
@@ -994,10 +1000,34 @@ EraseGptTable (
     return Status;
   }
 
+  //
+  // Erase Secondary GPT table.
+  //
+  SecondaryPartitionEntryLBA = LastBlock - EntriesSize / BlockSize;
+
+  BufferSize = BlockSize + EntriesSize;
+  Buffer = AllocateZeroPool (BufferSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = PartData->DiskIo->WriteDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             SecondaryPartitionEntryLBA * BlockSize,
+             BufferSize,
+             Buffer
+             );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
   if (Buffer != NULL) {
     FreePool (Buffer);
     Buffer = NULL;
   }
+
+  PartData->BlockIo->FlushBlocks (PartData->BlockIo);
 
   return Status;
 }
