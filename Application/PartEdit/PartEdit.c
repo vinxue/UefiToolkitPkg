@@ -1175,7 +1175,7 @@ ShellAppMain (
   )
 {
   EFI_STATUS                Status;
-  CHAR8                     PartitionName[18];
+  CHAR8                     PartitionName[36];
   UINTN                     Offset;
   VOID                      *Buffer;
   UINTN                     BufferSize;
