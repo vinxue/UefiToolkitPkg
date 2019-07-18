@@ -915,7 +915,7 @@ ErasePartition (
   //
   // Allocate the fill buffer
   //
-  FillBufferSize = SIZE_64MB;
+  FillBufferSize = FILL_BUF_SIZE;
   FillBuffer = AllocateZeroPool (FillBufferSize);
   if (FillBuffer == NULL) {
     return EFI_OUT_OF_RESOURCES;
@@ -924,8 +924,8 @@ ErasePartition (
   Offset = 0;
 
   while (PartitionSize > 0) {
-    if (PartitionSize > SIZE_64MB) {
-      Count = SIZE_64MB;
+    if (PartitionSize > FillBufferSize) {
+      Count = FillBufferSize;
     } else {
       Count = PartitionSize;
     }
@@ -934,7 +934,7 @@ ErasePartition (
                         BlockIo,
                         MediaId,
                         Offset,
-                        PartitionSize,
+                        Count,
                         FillBuffer
                         );
     if (EFI_ERROR (Status)) {
