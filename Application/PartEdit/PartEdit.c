@@ -997,7 +997,16 @@ EraseGptTable (
              Buffer
              );
   if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
     return Status;
+  }
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
   }
 
   //
@@ -1019,6 +1028,115 @@ EraseGptTable (
              Buffer
              );
   if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
+  }
+
+  PartData->BlockIo->FlushBlocks (PartData->BlockIo);
+
+  return Status;
+}
+
+EFI_STATUS
+EFIAPI
+SaveGptTable (
+  IN PARTITON_DATA          *PartData
+  )
+{
+  EFI_STATUS            Status;
+  VOID                  *Buffer;
+  UINTN                 BufferSize;
+  UINT32                BlockSize;
+  EFI_LBA               LastBlock;
+  UINT64                EntriesSize;
+  EFI_LBA               SecondaryPartitionEntryLBA;
+
+  if (PartData == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  BlockSize   = PartData->BlockIo->Media->BlockSize;
+  LastBlock   = PartData->BlockIo->Media->LastBlock;
+  EntriesSize = MAX_GPT_ENTRIES * GPT_ENTRY_SIZE;
+
+  //
+  // Read Primary GPT table.
+  //
+  BufferSize = 2 * BlockSize + EntriesSize;
+  Buffer = AllocateZeroPool (BufferSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = PartData->DiskIo->ReadDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             0,
+             BufferSize,
+             Buffer
+             );
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  Status = SaveFileToDisk (L"PrimarySave.bin", BufferSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
+  }
+
+  //
+  // Erase Secondary GPT table.
+  //
+  SecondaryPartitionEntryLBA = LastBlock - EntriesSize / BlockSize;
+
+  BufferSize = BlockSize + EntriesSize;
+  Buffer = AllocateZeroPool (BufferSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = PartData->DiskIo->ReadDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             SecondaryPartitionEntryLBA * BlockSize,
+             BufferSize,
+             Buffer
+             );
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  Status = SaveFileToDisk (L"SecondarySave.bin", BufferSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
     return Status;
   }
 
@@ -1148,7 +1266,8 @@ ShowHelpInfo (
   Print (L"  PartEdit.efi read partname offset size\n");
   Print (L"  PartEdit.efi flash partname filename\n");
   Print (L"  PartEdit.efi erase partname\n");
-  Print (L"  PartEdit.efi reset (Erase GPT table)\n");
+  Print (L"  PartEdit.efi gpt erase\n");
+  Print (L"  PartEdit.efi gpt save\n");
   Print (L"  PartEdit.efi save offset size filename\n");
   Print (L"  PartEdit.efi write offset size filename\n\n");
 }
@@ -1209,24 +1328,41 @@ ShellAppMain (
       DumpParentDevice ();
       return EFI_SUCCESS;
     }
+  }
 
+  if (Argc == 3) {
     //
     // Erase GPT table.
     //
-    if ((!StrCmp (Argv[1], L"reset")) || (!StrCmp (Argv[1], L"RESET"))) {
-      Status = EraseGptTable (mPartData);
-      if (EFI_ERROR (Status)) {
-        Print (L"Erase GPT table failed: %r\n", Status);
-        return Status;
+    if ((!StrCmp (Argv[1], L"gpt")) || (!StrCmp (Argv[1], L"GPT"))) {
+      if ((!StrCmp (Argv[2], L"erase")) || (!StrCmp (Argv[2], L"ERASE"))) {
+        Status = EraseGptTable (mPartData);
+        if (EFI_ERROR (Status)) {
+          Print (L"Erase GPT table failed: %r\n", Status);
+          return Status;
+        }
+
+        Print (L"Erase GPT table Passed.\n");
+        return EFI_SUCCESS;
       }
 
-      Print (L"Erase GPT table passed.\n");
-      return EFI_SUCCESS;
+      //
+      // Save GPT table.
+      //
+      if ((!StrCmp (Argv[2], L"save")) || (!StrCmp (Argv[2], L"SAVE"))) {
+        Status = SaveGptTable (mPartData);
+        if (EFI_ERROR (Status)) {
+          Print (L"Save GPT table failed: %r\n", Status);
+          return Status;
+        }
+
+        Print (L"Save GPT table Passed.\n");
+        Print (L"PrimarySave.bin\nSecondarySave.bin\n");
+        return EFI_SUCCESS;
+      }
+
     }
 
-  }
-
-   if (Argc == 3) {
     //
     // Erase a given partition
     //
@@ -1237,11 +1373,11 @@ ShellAppMain (
         Print (L"Erase partition: %a failed. %r\n", PartitionName, Status);
         return Status;
       }
-      Print (L"Erase partition: %a passed.\n", PartitionName);
+      Print (L"Erase partition: %a Passed.\n", PartitionName);
       return EFI_SUCCESS;
     }
 
-   }
+  }
 
   if (Argc == 4) {
     //
@@ -1260,7 +1396,7 @@ ShellAppMain (
       if (EFI_ERROR (Status)) {
         Print (L"Flash partition %a failed: %r\n", PartitionName, Status);
       } else {
-        Print (L"Flash partition %a passed: %r\n", PartitionName, Status);
+        Print (L"Flash partition %a Passed: %r\n", PartitionName, Status);
       }
 
       if (Buffer != NULL) {
@@ -1320,7 +1456,7 @@ ShellAppMain (
         return Status;
       }
 
-      Print (L"Save disk data passed.\n");
+      Print (L"Save disk data Passed.\n");
 
       return EFI_SUCCESS;
     }
@@ -1338,7 +1474,7 @@ ShellAppMain (
         return Status;
       }
 
-      Print (L"Write disk data passed.\n");
+      Print (L"Write disk data Passed.\n");
 
       return EFI_SUCCESS;
     }
