@@ -1253,6 +1253,61 @@ WriteDataToDisk (
   return EFI_SUCCESS;
 }
 
+EFI_STATUS
+EFIAPI
+DumpDiskData (
+  IN PARTITON_DATA          *PartData,
+  IN UINTN                  Offset,
+  IN BOOLEAN                IsLBA
+  )
+{
+  EFI_STATUS          Status;
+  VOID                *Buffer;
+  UINT32              BufferSize;
+  UINTN               DumpOffset;
+
+  if (PartData == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  BufferSize = PartData->BlockIo->Media->BlockSize;
+  DumpOffset = Offset;
+
+  if (IsLBA) {
+    DumpOffset = MultU64x32 (Offset, BufferSize);
+  }
+
+  Buffer = AllocateZeroPool (BufferSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = PartData->DiskIo->ReadDisk (
+             PartData->DiskIo,
+             PartData->BlockIo->Media->MediaId,
+             DumpOffset,
+             BufferSize,
+             Buffer
+             );
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  if (IsLBA) {
+    Print (L"LBA %016lx Size %08x bytes\n", Offset, BufferSize);
+  } else {
+    Print (L"Offset %016lx Size %08x bytes\n", Offset, BufferSize);
+  }
+
+  DumpHex (2, 0, BufferSize, Buffer);
+
+  return EFI_SUCCESS;
+}
+
 VOID
 EFIAPI
 ShowHelpInfo (
@@ -1269,7 +1324,9 @@ ShowHelpInfo (
   Print (L"  PartEdit.efi gpt erase\n");
   Print (L"  PartEdit.efi gpt save\n");
   Print (L"  PartEdit.efi save offset size filename\n");
-  Print (L"  PartEdit.efi write offset size filename\n\n");
+  Print (L"  PartEdit.efi write offset size filename\n");
+  Print (L"  PartEdit.efi dump offset\n");
+  Print (L"  PartEdit.efi LBA [LBA]\n\n");
 }
 
 /**
@@ -1373,7 +1430,38 @@ ShellAppMain (
         Print (L"Erase partition: %a failed. %r\n", PartitionName, Status);
         return Status;
       }
+
       Print (L"Erase partition: %a Passed.\n", PartitionName);
+      return EFI_SUCCESS;
+    }
+
+    //
+    // Dump disk data by offset
+    //
+    if ((!StrCmp (Argv[1], L"dump")) || (!StrCmp (Argv[1], L"DUMP"))) {
+      Offset = StrHexToUintn (Argv[2]);
+
+      Status = DumpDiskData (mPartData, Offset, FALSE);
+      if (EFI_ERROR (Status)) {
+        Print (L"Dump disk data failed. %r\n", Status);
+        return Status;
+      }
+
+      return EFI_SUCCESS;
+    }
+
+    //
+    // Dump disk data by LBA
+    //
+    if ((!StrCmp (Argv[1], L"lba")) || (!StrCmp (Argv[1], L"LBA"))) {
+      Offset = StrHexToUintn (Argv[2]);
+
+      Status = DumpDiskData (mPartData, Offset, TRUE);
+      if (EFI_ERROR (Status)) {
+        Print (L"Dump disk data failed. %r\n", Status);
+        return Status;
+      }
+
       return EFI_SUCCESS;
     }
 
