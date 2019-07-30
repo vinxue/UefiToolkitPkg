@@ -56,16 +56,16 @@ ShellAppMain (
   Status = ShellGetFileSize (SourceHandle, &SourceFileSize);
   if (EFI_ERROR (Status)) {
     Print (L"Failed to read file %s size, Status: %r\n", Argv[1], Status);
-    if (NULL != SourceHandle) {
+    if (SourceHandle != NULL) {
       ShellCloseFile (&SourceHandle);
     }
     return Status;
   }
 
   Buffer = AllocateZeroPool (SourceFileSize);
-  if (NULL == Buffer) {
+  if (Buffer == NULL) {
     Print (L"Allocate pool failed\n");
-    if (NULL != SourceHandle) {
+    if (SourceHandle != NULL) {
       ShellCloseFile (&SourceHandle);
     }
     return EFI_OUT_OF_RESOURCES;
@@ -84,7 +84,14 @@ ShellAppMain (
   }
 
   if (SourceFileSize != (UINTN) PcdGet32 (PcdFlashAreaSize)) {
-    Print (L"BIOS file size %x is not equal to flash size %x.\n", SourceFileSize, (UINTN) PcdGet32 (PcdFlashAreaSize));
+    Print (L"BIOS file size %x is not equal to flash size 0x%x.\n", SourceFileSize, (UINTN) PcdGet32 (PcdFlashAreaSize));
+    if (SourceHandle != NULL) {
+      ShellCloseFile (&SourceHandle);
+    }
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+    }
+    return EFI_BAD_BUFFER_SIZE;
   }
 
   StartAddress = 0;
