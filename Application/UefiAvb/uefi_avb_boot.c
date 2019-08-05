@@ -184,7 +184,7 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
   }
 
   /* The kernel has to be in its own specific memory pool. */
-  addr = BASE_1GB;
+  addr = 0x3fffffff;
   err = uefi_call_wrapper(BS->AllocatePages,
                           4,
                           AllocateMaxAddress,
@@ -203,16 +203,19 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
   initramfs_buf = NULL;
   initramfs_size = header->ramdisk_size + header->second_size;
   if (initramfs_size > 0) {
-    err = uefi_call_wrapper(BS->AllocatePool,
-                            NUM_ARGS_ALLOCATE_POOL,
+    addr = 0x3fffffff;
+    err = uefi_call_wrapper(BS->AllocatePages,
+                            4,
+                            AllocateMaxAddress,
                             EfiLoaderCode,
-                            initramfs_size,
-                            (VOID **)&initramfs_buf);
+                            EFI_SIZE_TO_PAGES(initramfs_size),
+                            &addr);
     if (EFI_ERROR(err)) {
       avb_error("Could not allocate initrd buffer.\n");
       ret = UEFI_AVB_BOOT_KERNEL_RESULT_ERROR_OOM;
       goto out;
     }
+    kernel_buf = (UINT8 *)(UINTN)addr;
     /* Concatente the first and second initramfs. */
     offset = header->page_size;
     offset += round_up(header->kernel_size, header->page_size);
