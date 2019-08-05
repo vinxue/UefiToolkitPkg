@@ -17,6 +17,8 @@ type_2_guid = {
     'misc' : 'ef32a33b-a409-486c-9141-9ffb711f6266',
     'metadata' : '20ac26be-20b7-11e3-84c5-6cfdb94711e9',
     'tertiary' : '767941d0-2085-11e3-ad3b-6cfdb94711e9',
+    'vbmeta': 'b598858a-5fe3-418e-b8c4-824b41f4adfc',
+    'encrypt': 'e99d84d7-2c1b-44cf-8c58-effae2dc2558',
     'factory' : '9fdaa6ef-4b3f-40d2-ba8d-bff16bfb887b' }
 
 def zero_pad(s, size):
@@ -68,8 +70,8 @@ def preparse_partitions(gpt_in, cfg):
     return partitions
 
 def main():
-    if len(sys.argv) != 2:
-        print 'Usage : ', sys.argv[0], 'gpt_in1.ini'
+    if len(sys.argv) != 3:
+        print 'Usage : ', sys.argv[0], 'gpt_in1.ini' 'gpt_in1.bin'
         print '    write binary to stdout'
         sys.exit(1)
 
@@ -88,7 +90,7 @@ def main():
         start_lba = cfg.getint('base', 'start_lba')
     npart = len(part)
 
-    out = sys.stdout
+    out = open(sys.argv[2], 'wb')
     out.write(struct.pack('<I', magic))
     out.write(struct.pack('<I', start_lba))
     out.write(struct.pack('<I', npart))
@@ -106,5 +108,6 @@ def main():
         guid = uuid.uuid4()
         out.write(guid.bytes_le)
 
+    out.close()
 if __name__ == "__main__":
     main()
