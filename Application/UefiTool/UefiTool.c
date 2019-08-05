@@ -89,9 +89,9 @@ ShowHelpInfo(
   Print (L"  UefiTool.efi WRMSR [MSRIndex] [MSRValue]\n\n");
   Print (L"Read CPUID:\n");
   Print (L"  UefiTool.efi CPUID [CPUID_Index] [CPUID_SubIndex]\n\n");
-  Print (L"Read GDTR resister:\n");
+  Print (L"Read GDTR register:\n");
   Print (L"  UefiTool.efi -SGDT\n\n");
-  Print (L"Read CR resister:\n");
+  Print (L"Read CR register:\n");
   Print (L"  UefiTool.efi -CR\n\n");
 }
 
@@ -103,7 +103,7 @@ ShowHelpInfo(
   @param[out] Num                  Returns processor number.
 
   @retval EFI_SUCCESS              Operation completed successfully.
-  @retval EFI_UNSUPPORTED       MpService protocol not found.
+  @retval EFI_UNSUPPORTED          MpService protocol not found.
 
 **/
 EFI_STATUS
