@@ -74,6 +74,7 @@
   UefiPkg/Application/GptGen/GptGen.inf
   UefiPkg/Application/CpuFreq/CpuFreq.inf
   UefiPkg/Application/GopVer/GopVer.inf
+  UefiPkg/Application/DumpLog/DumpLog.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
