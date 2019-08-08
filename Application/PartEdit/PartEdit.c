@@ -139,6 +139,10 @@ SaveFileToDisk (
   EFI_STATUS           Status;
   SHELL_FILE_HANDLE    FileHandle;
 
+  if (!EFI_ERROR (ShellFileExists (FileName))) {
+    ShellDeleteFileByName (FileName);
+  }
+
   Status = ShellOpenFileByName (FileName, &FileHandle, EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE, 0);
   if (EFI_ERROR (Status)) {
     Print (L"Open file failed: %r\n", Status);

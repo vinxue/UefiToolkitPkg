@@ -179,6 +179,10 @@ SaveFileToDisk (
 
   mTextOut->OutputString (mTextOut, L"Save file...\r\n");
 
+  if (!EFI_ERROR (ShellFileExists (L"Download.bin"))) {
+    ShellDeleteFileByName (L"Download.bin");
+  }
+
   Status = ShellOpenFileByName (L"Download.bin", &FileHandle, EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE, 0);
   if (EFI_ERROR (Status)) {
     mTextOut->OutputString (mTextOut, L"ERROR: Open file\n");
