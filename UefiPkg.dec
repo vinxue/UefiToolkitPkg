@@ -39,3 +39,9 @@
 [PcdsFixedAtBuild]
   gUefiPkgTokenSpaceGuid.PcdFlashAreaBaseAddress|0xFF000000|UINT32|0x10000001
   gUefiPkgTokenSpaceGuid.PcdFlashAreaSize|0x1000000|UINT32|0x10000002
+
+  ## This PCD defines BaseAddress and Size(in bytes) of the Ram debug and enable state.
+  # @Prompt BaseAddress and Size(in bytes) of the Ram debug and enable state.
+  gUefiPkgTokenSpaceGuid.PcdRamDebugMemAddr|0x1000000|UINT32|0x10000003
+  gUefiPkgTokenSpaceGuid.PcdRamDebugMemSize|0x100000|UINT32|0x10000004
+  gUefiPkgTokenSpaceGuid.PcdRamDebugEnable|TRUE|BOOLEAN|0x10000005

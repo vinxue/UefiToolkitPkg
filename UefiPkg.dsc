@@ -55,6 +55,7 @@
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
 
   PlatformFlashAccessLib|UefiPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
+  RamDebugLib|UefiPkg/Library/RamDebugLib/RamDebugLib.inf
 
 [LibraryClasses.common.PEIM]
   PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
