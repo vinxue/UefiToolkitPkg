@@ -255,17 +255,17 @@ ConnectionAccepted (
 }
 
 /**
-UEFI application entry point which has an interface similar to a
-standard C main function.
+  UEFI application entry point which has an interface similar to a
+  standard C main function.
 
-The ShellCEntryLib library instance wrappers the actual UEFI application
-entry point and calls this ShellAppMain function.
+  The ShellCEntryLib library instance wrappers the actual UEFI application
+  entry point and calls this ShellAppMain function.
 
-@param[in]  Argc  The number of parameters.
-@param[in]  Argv  The array of pointers to parameters.
+  @param[in]  Argc  The number of parameters.
+  @param[in]  Argv  The array of pointers to parameters.
 
-@retval  0               The application exited normally.
-@retval  Other           An error occurred.
+  @retval  0               The application exited normally.
+  @retval  Other           An error occurred.
 
 **/
 INTN
