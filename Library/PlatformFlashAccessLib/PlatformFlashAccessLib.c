@@ -56,13 +56,12 @@ typedef enum {
 // SPI default opcode slots
 //
 #define SPI_OPCODE_JEDEC_ID_INDEX        0
-#define SPI_OPCODE_READ_ID_INDEX         1
-#define SPI_OPCODE_WRITE_S_INDEX         2
-#define SPI_OPCODE_WRITE_INDEX           3
-#define SPI_OPCODE_READ_INDEX            4
-#define SPI_OPCODE_ERASE_INDEX           5
-#define SPI_OPCODE_READ_S_INDEX          6
-#define SPI_OPCODE_CHIP_ERASE_INDEX      7
+#define SPI_OPCODE_WRITE_S_INDEX         1
+#define SPI_OPCODE_WRITE_INDEX           2
+#define SPI_OPCODE_READ_INDEX            3
+#define SPI_OPCODE_ERASE_INDEX           4
+#define SPI_OPCODE_READ_S_INDEX          5
+#define SPI_OPCODE_CHIP_ERASE_INDEX      6
 
 STATIC EFI_PHYSICAL_ADDRESS     mInternalFdAddress;
 
@@ -483,7 +482,7 @@ Done:
     Progress (EndPercentage);
   }
 
-  return EFI_SUCCESS;
+  return Status;
 }
 
 /**
