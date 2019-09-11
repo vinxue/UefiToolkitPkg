@@ -67,6 +67,7 @@
 
 [Components]
   UefiPkg/Drivers/PrintScreenLogger/PrintScreenLogger.inf
+  UefiPkg/Drivers/UefiConsole/UefiConsole.inf
   UefiPkg/Application/UefiTool/UefiTool.inf
   UefiPkg/Application/TcpTransport/TcpTransport.inf
   UefiPkg/Application/PartEdit/PartEdit.inf
