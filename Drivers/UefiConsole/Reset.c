@@ -95,21 +95,6 @@ ShellCommandRunReset (
             gRT->ResetSystem (EfiResetShutdown, EFI_SUCCESS, 0, NULL);
           }
         }
-      } else if (ConsoleCommandLineGetFlag (Package, L"-p")) {
-        if (ConsoleCommandLineGetFlag (Package, L"-c")) {
-          Print (L"reset:Too many arguments.\n");
-          ShellStatus = SHELL_INVALID_PARAMETER;
-        } else {
-          String = ConsoleCommandLineGetValue (Package, L"-p");
-          if (String != NULL) {
-            //
-            // reset -p fastboot/bootloader/force-recovery
-            //
-            gRT->ResetSystem (EfiResetPlatformSpecific, EFI_SUCCESS, StrSize (String), (VOID *) String);
-          } else {
-            gRT->ResetSystem (EfiResetPlatformSpecific, EFI_SUCCESS, 0, NULL);
-          }
-        }
       } else {
         //
         // this is default so dont worry about flag...

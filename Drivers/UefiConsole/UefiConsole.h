@@ -24,10 +24,8 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/BaseMemoryLib.h>
 #include <Library/PrintLib.h>
 #include <Library/SortLib.h>
-#include <Protocol/Shell.h>
 #include <Protocol/UnicodeCollation.h>
 #include <Guid/GlobalVariable.h>
 #include "ConsoleParameters.h"

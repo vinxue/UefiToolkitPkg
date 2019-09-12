@@ -887,6 +887,9 @@ NotificationFunction (
     // Ignore future Console requests for some period.
     //
     Status = gBS->SetTimer (mTimerEvent, TimerRelative, CONSOLE_REQUEST_DELAY);
+
+    gST->ConOut->OutputString (gST->ConOut, L"Console mode exited.\n");
+    gST->ConOut->SetCursorPosition (gST->ConOut, 0, gST->ConOut->Mode->CursorRow);
   }
 
   return EFI_SUCCESS;
@@ -922,7 +925,7 @@ UefiConsoleStartMonitor (
                   NULL,
                   EFI_OPEN_PROTOCOL_GET_PROTOCOL
                   );
-  if (EFI_ERROR(Status)) {
+  if (EFI_ERROR (Status)) {
     Print (L"No SimpleTextInputEx was found.\n");
     return Status;
   }

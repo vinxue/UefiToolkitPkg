@@ -542,7 +542,7 @@ ConsoleInternalIsFlag (
   //
   // ASSERT that Name isn't NULL
   //
-  ASSERT(Name != NULL);
+  ASSERT (Name != NULL);
 
   //
   // If we accept numbers then dont return TRUE. (they will be values)
@@ -780,12 +780,7 @@ ConsoleInternalCommandLineParse (
     GetItemValue = 0;
     InsertHeadList (*CheckPackage, &CurrentItemPackage->Link);
   }
-  //
-  // support for AutoPageBreak
-  //
-  /* if (AutoPageBreak && ConsoleCommandLineGetFlag(*CheckPackage, L"-b")) {
-    ShellSetPageBreakMode(TRUE);
-  } */
+
   return (EFI_SUCCESS);
 }
 
@@ -800,7 +795,6 @@ ConsoleInternalCommandLineParse (
   @param[out] ProblemParam      Optional pointer to pointer to unicode string for
                                 the paramater that caused failure.
   @param[in] AutoPageBreak      Will automatically set PageBreakEnabled.
-  @param[in] AlwaysAllowNumbers Will never fail for number based flags.
 
   @retval EFI_SUCCESS           The operation completed sucessfully.
   @retval EFI_OUT_OF_RESOURCES  A memory allocation failed.
