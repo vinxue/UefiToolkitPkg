@@ -214,7 +214,7 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
       ret = UEFI_AVB_BOOT_KERNEL_RESULT_ERROR_OOM;
       goto out;
     }
-    kernel_buf = (UINT8 *)(UINTN)addr;
+    initramfs_buf = (UINT8 *)(UINTN)addr;
     /* Concatente the first and second initramfs. */
     offset = header->page_size;
     offset += round_up(header->kernel_size, header->page_size);
@@ -294,12 +294,13 @@ UEFIAvbBootKernelResult uefi_avb_boot_kernel(EFI_HANDLE efi_image_handle,
   avb_memcpy(setup, image_setup, sizeof(struct SetupHeader));
   setup->loader_id = 0xff;
   setup->code32_start =
-      ((UINT32)(UINTN)kernel_buf) + (image_setup->setup_secs + 1) * 512;  //Gavin @TODO
+      ((UINT32)(UINTN)kernel_buf) + (image_setup->setup_secs + 1) * 512;
   setup->cmd_line_ptr = (UINT32)(UINTN)cmdline_utf8;
 
   setup->ramdisk_start = (UINT32)(UINTN)initramfs_buf;
   setup->ramdisk_len = (UINT32)(UINTN)initramfs_size;
 
+  DisableInterrupts();
   /* Jump to the kernel. */
   // linux_efi_handover(efi_image_handle, setup);
   JumpToUefiKernel ((VOID *)gImageHandle, (VOID *) gST, setup, (VOID *) (UINTN) (setup->code32_start));
