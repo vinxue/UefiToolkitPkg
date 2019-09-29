@@ -85,7 +85,7 @@ ReadFileFromDisk (
   VOID                 *FileBuffer;
 
   Status = ShellOpenFileByName (FileName, &FileHandle, EFI_FILE_MODE_READ, 0);
-	if (EFI_ERROR (Status)) {
+  if (EFI_ERROR (Status)) {
     Print (L"Open file failed: %r\n", Status);
     return Status;
   }
