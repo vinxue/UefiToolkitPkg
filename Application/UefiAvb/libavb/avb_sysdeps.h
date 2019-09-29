@@ -93,7 +93,7 @@ void avb_print(const char* message);
 /* Prints out a vector of strings. Each argument must point to a
  * NUL-terminated UTF-8 string and NULL should be the last argument.
  */
-void avb_printv(const char* message, ...) AVB_ATTR_SENTINEL;
+void EFIAPI avb_printv(const char* message, ...) AVB_ATTR_SENTINEL;
 
 /* Aborts the program or reboots the device. */
 void avb_abort(void) AVB_ATTR_NO_RETURN;

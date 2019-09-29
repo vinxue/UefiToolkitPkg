@@ -65,7 +65,7 @@ void avb_print(const char* message) {
   avb_free(message_ucs2);
 }
 
-void avb_printv(const char* message, ...) {
+void EFIAPI avb_printv(const char* message, ...) {
   VA_LIST ap;
 
   VA_START(ap, message);
