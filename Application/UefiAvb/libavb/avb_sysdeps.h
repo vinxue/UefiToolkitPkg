@@ -38,10 +38,27 @@ extern "C" {
  * like uint8_t, uint64_t, and bool (with |false|, |true| keywords)
  * must be present.
  */
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+// #include <inttypes.h>
+// #include <stdbool.h>
+// #include <stddef.h>
+// #include <stdint.h>
+
+// Definitions of common types
+typedef INT8               int8_t;
+typedef INT16              int16_t;
+typedef INT32              int32_t;
+typedef INT64              int64_t;
+typedef UINT8              uint8_t;
+typedef UINT16             uint16_t;
+typedef UINT32             uint32_t;
+typedef UINT64             uint64_t;
+
+typedef UINTN              size_t;
+typedef UINTN              uintptr_t;
+
+typedef BOOLEAN            bool;
+#define true               TRUE
+#define false              FALSE
 
 /* If you don't have gcc or clang, these attribute macros may need to
  * be adjusted.

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <stdint.h>
+// #include <stdint.h>
 
 #define BOOT_MAGIC "ANDROID!"
 #define BOOT_MAGIC_SIZE 8

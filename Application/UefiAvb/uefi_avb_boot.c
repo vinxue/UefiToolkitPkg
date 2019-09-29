@@ -25,10 +25,9 @@
 // #include <efi.h>
 // #include <efilib.h>
 
-#include "bootimg.h"
-
 #include "uefi_avb_boot.h"
 #include "uefi_avb_util.h"
+#include "bootimg.h"
 
 /* See Documentation/x86/boot.txt for this struct and more information
  * about the boot/handover protocol.
