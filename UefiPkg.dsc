@@ -22,6 +22,11 @@
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
 
+  #
+  # UefiPkg DSC include file
+  #
+  !include UefiPkg/UefiPkg.dsc.inc
+
 [LibraryClasses]
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
@@ -54,9 +59,6 @@
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
 
-  PlatformFlashAccessLib|UefiPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
-  RamDebugLib|UefiPkg/Library/RamDebugLib/RamDebugLib.inf
-
 [LibraryClasses.common.PEIM]
   PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
   PeiServicesTablePointerLib|MdePkg/Library/PeiServicesTablePointerLib/PeiServicesTablePointerLib.inf
@@ -64,19 +66,6 @@
   MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
   ExtractGuidedSectionLib|MdePkg/Library/PeiExtractGuidedSectionLib/PeiExtractGuidedSectionLib.inf
   HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
-
-[Components]
-  UefiPkg/Drivers/PrintScreenLogger/PrintScreenLogger.inf
-  UefiPkg/Drivers/UefiConsole/UefiConsole.inf
-  UefiPkg/Application/UefiTool/UefiTool.inf
-  UefiPkg/Application/TcpTransport/TcpTransport.inf
-  UefiPkg/Application/PartEdit/PartEdit.inf
-  UefiPkg/Application/FlashTool/FlashTool.inf
-  UefiPkg/Application/UefiAvb/UefiAvb.inf
-  UefiPkg/Application/GptGen/GptGen.inf
-  UefiPkg/Application/CpuFreq/CpuFreq.inf
-  UefiPkg/Application/GopVer/GopVer.inf
-  UefiPkg/Application/DumpLog/DumpLog.inf
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x1f
