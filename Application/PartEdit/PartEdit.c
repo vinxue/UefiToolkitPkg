@@ -114,8 +114,8 @@ ReadFileFromDisk (
     if (FileHandle != NULL) {
       ShellCloseFile (&FileHandle);
     }
-    if (Buffer != NULL) {
-      FreePool (Buffer);
+    if (FileBuffer != NULL) {
+      FreePool (FileBuffer);
     }
     return Status;
   }
