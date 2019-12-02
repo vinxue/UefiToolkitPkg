@@ -28,3 +28,4 @@
   UefiPkg/Application/CpuFreq/CpuFreq.inf
   UefiPkg/Application/GopVer/GopVer.inf
   UefiPkg/Application/DumpLog/DumpLog.inf
+  UefiPkg/Application/IshSlot/IshSlot.inf
