@@ -29,6 +29,62 @@
 #include "uefi_avb_boot.h"
 #include "uefi_avb_ops.h"
 
+#define MAX_OEM_CMDLINE_LENGTH             0x200
+
+/**
+  Concatenates a formatted ASCII string to Kernel command line.
+
+  @param[in]  CmdLine             The pointer of Kernel command line.
+  @param[in]  Format              The format string.
+  @param ...                      Variable arguments based on the format string.
+
+  @retval EFI_SUCCESS             Operation completed successfully.
+  @retval others                  Some error occurs when executing this routine.
+
+**/
+EFI_STATUS
+EFIAPI
+AppendCmdLine (
+  IN OUT CHAR8         *CmdLine,
+  IN CONST CHAR8       *Format,
+  ...
+  )
+{
+  VA_LIST               Marker;
+  UINTN                 Offset;
+  UINTN                 Count;
+
+  //
+  // If CmdLine or Format is NULL, then return error.
+  //
+  if (CmdLine == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  if (Format == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  VA_START (Marker, Format);
+  Count = SPrintLengthAsciiFormat (Format, Marker);
+  VA_END (Marker);
+
+  Offset = AsciiStrLen (CmdLine);
+
+  if (Offset + Count + 1 > MAX_OEM_CMDLINE_LENGTH) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  //
+  // Append a new kernel command line to a origin command line string
+  //
+  VA_START (Marker, Format);
+  AsciiVSPrint (CmdLine + Offset, MAX_OEM_CMDLINE_LENGTH - Offset, Format, Marker);
+  VA_END (Marker);
+
+  return EFI_SUCCESS;
+}
+
 EFI_STATUS
 EFIAPI
 UefiMain (

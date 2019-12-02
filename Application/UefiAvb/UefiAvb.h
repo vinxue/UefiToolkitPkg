@@ -24,6 +24,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/PrintLib.h>
 #include <Library/DevicePathLib.h>
 #include <Protocol/BlockIo.h>
 #include <Protocol/DiskIo.h>
