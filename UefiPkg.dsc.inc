@@ -29,3 +29,6 @@
   UefiPkg/Application/GopVer/GopVer.inf
   UefiPkg/Application/DumpLog/DumpLog.inf
   UefiPkg/Application/IshSlot/IshSlot.inf
+
+[Components.IA32]
+  UefiPkg/Drivers/RawDataInit/RawDataInit.inf

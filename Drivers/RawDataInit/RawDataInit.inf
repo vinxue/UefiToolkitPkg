@@ -1,0 +1,46 @@
+
+##  @file
+#  Get RAW data from FVMAIN in PEI stage.
+#
+#  Copyright (c) 2020, Gavin Xue. All rights reserved.<BR>
+#
+#  This program and the accompanying materials
+#  are licensed and made available under the terms and conditions of the BSD License
+#  which accompanies this distribution. The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RawDataInit
+  FILE_GUID                      = 1D316CD1-189B-42FE-A2F5-AC552870F150
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = RawDataInitEntryPoint
+
+[Sources]
+  RawDataInit.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  UefiPkg/UefiPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  PeiServicesLib
+  PeiServicesTablePointerLib
+  PeimEntryPoint
+
+[Guids]
+  gRawDataGuid
+
+[Ppis]
+  gEfiEndOfPeiSignalPpiGuid
+
+[Depex]
+  gEfiPeiMemoryDiscoveredPpiGuid
