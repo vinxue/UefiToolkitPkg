@@ -29,9 +29,9 @@ jobs:
       git clone https://github.com/tianocore/edk2 -b UDK2018
       xcopy /e /y UefiPkg edk2\UefiPkg\
       cd edk2
-      set PYTHON_HOME=C:\Python27amd64
+      set PYTHON_HOME=C:\hostedtoolcache\windows\Python\2.7.17\x64
       set NASM_PREFIX=%cd%\UefiPkg\Tools\Nasm\
-      edksetup.bat rebuild && build -p UefiPkg\UefiPkg.dsc -a X64 -t VS2017 -b RELEASE
+      edksetup.bat rebuild && build -p UefiPkg\UefiPkg.dsc -a IA32 -a X64 -t VS2017 -b RELEASE
     displayName: 'Run a Windows build script'
 
   - script:

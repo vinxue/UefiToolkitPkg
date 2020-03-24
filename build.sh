@@ -21,4 +21,4 @@ fi
 source edksetup.sh || exit 1
 make -C BaseTools || exit 1
 
-build -a X64 -b RELEASE -t GCC5 -p UefiPkg/UefiPkg.dsc || exit 1
+build -a IA32 -a X64 -b RELEASE -t GCC5 -p UefiPkg/UefiPkg.dsc || exit 1
