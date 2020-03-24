@@ -17,8 +17,8 @@
   RamDebugLib|UefiPkg/Library/RamDebugLib/RamDebugLib.inf
 
 [Components.X64]
-  UefiPkg/Drivers/PrintScreenLogger/PrintScreenLogger.inf
-  UefiPkg/Drivers/UefiConsole/UefiConsole.inf
+  UefiPkg/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
+  UefiPkg/Drivers/Dxe/UefiConsole/UefiConsole.inf
   UefiPkg/Application/UefiTool/UefiTool.inf
   UefiPkg/Application/TcpTransport/TcpTransport.inf
   UefiPkg/Application/PartEdit/PartEdit.inf
@@ -31,4 +31,4 @@
   UefiPkg/Application/IshSlot/IshSlot.inf
 
 [Components.IA32]
-  UefiPkg/Drivers/RawDataInit/RawDataInit.inf
+  UefiPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
