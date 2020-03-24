@@ -186,7 +186,7 @@ RawDataInitAtEndOfPei (
   UINTN                  RawSize;
   UINT8                  *Buffer;
 
-  Status = GetRawImage (&gRawDataGuid, &Buffer, &RawSize);
+  Status = GetRawImage (&gRawDataGuid, (VOID **) &Buffer, &RawSize);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "GetRawImage failed: %r\n", Status));
   } else {
