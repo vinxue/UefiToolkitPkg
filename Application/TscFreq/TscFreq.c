@@ -1,7 +1,7 @@
 /** @file
-  A UEFI tool for CPU frequency.
+  A UEFI tool for TSC frequency.
 
-  Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
+  Copyright (c) 2019 - 2020, Gavin Xue. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -11,18 +11,18 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#include "CpuFreq.h"
+#include "TscFreq.h"
 
 EFI_STATUS
 EFIAPI
-GetCpuFrequency (
-  OUT UINT64         *CpuFrequency
+GetTscFrequency (
+  OUT UINT64         *TscFrequency
   )
 {
   UINT64             TimeStampCounterStart;
   UINT64             TimeStampCounterEnd;
 
-  if (CpuFrequency == NULL) {
+  if (TscFrequency == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
@@ -34,9 +34,9 @@ GetCpuFrequency (
   TimeStampCounterEnd   = AsmReadTsc ();
 
   //
-  // Calculate CPU actual frequency.
+  // Calculate TSC frequency.
   //
-  *CpuFrequency = DivU64x32Remainder (TimeStampCounterEnd - TimeStampCounterStart, 100, NULL);
+  *TscFrequency = DivU64x32Remainder (TimeStampCounterEnd - TimeStampCounterStart, 100, NULL);
 
   return EFI_SUCCESS;
 }
@@ -63,14 +63,14 @@ ShellAppMain (
   )
 {
   EFI_STATUS         Status;
-  UINT64             CpuFrequency;
+  UINT64             TscFrequency;
 
-  Status = GetCpuFrequency (&CpuFrequency);
+  Status = GetTscFrequency (&TscFrequency);
   if (EFI_ERROR (Status)) {
     return Status;
   }
 
-  Print (L"CPU Frequency: %d.%d GHz\n", CpuFrequency / 1000, (CpuFrequency % 1000) / 10);
+  Print (L"TSC Frequency: %d.%d GHz\n", TscFrequency / 1000, (TscFrequency % 1000) / 10);
 
   return 0;
 }

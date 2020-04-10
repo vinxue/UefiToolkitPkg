@@ -1,7 +1,7 @@
 ##  @file
 #  This is the UEFI application
 #
-#  Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
+#  Copyright (c) 2019 - 2020, Gavin Xue. All rights reserved.<BR>
 #
 #  This program and the accompanying materials
 #  are licensed and made available under the terms and conditions of the BSD License
@@ -15,14 +15,14 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = CpuFreq
+  BASE_NAME                      = TscFreq
   FILE_GUID                      = 6F222D43-C310-4DA9-8249-E5AB887437DD
   MODULE_TYPE                    = UEFI_APPLICATION
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = ShellCEntryLib
 
 [Sources]
-  CpuFreq.c
+  TscFreq.c
 
 [Packages]
   MdePkg/MdePkg.dec
