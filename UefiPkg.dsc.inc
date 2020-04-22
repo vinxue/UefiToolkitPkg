@@ -15,6 +15,9 @@
 [LibraryClasses]
   PlatformFlashAccessLib|UefiPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
   RamDebugLib|UefiPkg/Library/RamDebugLib/RamDebugLib.inf
+  TeeDevLib|UefiPkg/Library/TeeDevLib/TeeDevLib.inf
+  TeeDrvLib|UefiPkg/Library/TeeDrvLib/TeeDrvLib.inf
+  TeeClientApiLib|UefiPkg/Library/TeeClientApiLib/TeeClientApiLib.inf
 
 [Components.X64]
   UefiPkg/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
@@ -30,6 +33,7 @@
   UefiPkg/Application/DumpLog/DumpLog.inf
   UefiPkg/Application/IshSlot/IshSlot.inf
   UefiPkg/Application/GenGuid/GenGuid.inf
+  UefiPkg/Application/TeeApp/TeeApp.inf
 
 [Components.IA32]
   UefiPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
