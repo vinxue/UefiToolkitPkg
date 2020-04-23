@@ -28,7 +28,7 @@ jobs:
       $PYTHON2_PATH = ((Get-Item C:\hostedtoolcache\windows\Python\2*\x64) | Sort-Object -Descending)[0].FullName
       echo "##vso[task.setvariable variable=PYTHON2]$PYTHON2_PATH"
 
-    displayName: "Detect Python2 installation path"
+    displayName: 'Detect Python2 installation path'
 
   - script: |
       cd..
@@ -37,7 +37,8 @@ jobs:
       cd edk2
       set PYTHON_HOME=$(PYTHON2)
       set NASM_PREFIX=%cd%\UefiPkg\Tools\Nasm\
-      edksetup.bat rebuild && build -a IA32 -a X64 -b RELEASE -t VS2017 -p UefiPkg\UefiPkg.dsc
+      call edksetup.bat rebuild
+      call build -a IA32 -a X64 -b RELEASE -t VS2017 -p UefiPkg\UefiPkg.dsc
     displayName: 'Run a Windows build script'
 
   - script:
