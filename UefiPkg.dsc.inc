@@ -34,6 +34,7 @@
   UefiPkg/Application/IshSlot/IshSlot.inf
   UefiPkg/Application/GenGuid/GenGuid.inf
   UefiPkg/Application/TeeApp/TeeApp.inf
+  UefiPkg/Application/OtaUpdate/OtaUpdate.inf
 
 [Components.IA32]
   UefiPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
