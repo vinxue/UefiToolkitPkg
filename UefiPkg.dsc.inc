@@ -35,6 +35,7 @@
   UefiPkg/Application/GenGuid/GenGuid.inf
   UefiPkg/Application/TeeApp/TeeApp.inf
   UefiPkg/Application/OtaUpdate/OtaUpdate.inf
+  UefiPkg/Application/DumpMem/DumpMem.inf
 
 [Components.IA32]
   UefiPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
