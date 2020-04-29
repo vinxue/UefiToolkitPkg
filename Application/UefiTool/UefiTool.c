@@ -1,7 +1,7 @@
 /** @file
   A simple UEFI tool for debugging.
 
-  Copyright (c) 2017 - 2019, Gavin Xue. All rights reserved.<BR>
+  Copyright (c) 2017 - 2020, Gavin Xue. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -54,6 +54,7 @@ StrUpr (
 #define OPCODE_CR_BIT                         BIT6
 #define OPCODE_RMM_BIT                        BIT7
 #define OPCODE_WMM_BIT                        BIT8
+#define OPCODE_DUMPMEM_BIT                    BIT9
 
 typedef struct {
   // MSR
@@ -71,6 +72,11 @@ typedef struct {
   UINTN                     MmValue;
   UINTN                     MmWidth;
   UINT8                     MmAccessType;  // 0: Mem / MMIO; 1: IO
+
+  // Dump memory to file
+  UINTN                     DumpMemAddress;
+  UINTN                     DumpMemSize;
+  CHAR16                    DumpMemFile[256];
 } UEFI_TOOL_CONTEXT;
 
 UEFI_TOOL_CONTEXT    gUtContext;
@@ -93,6 +99,8 @@ ShowHelpInfo(
   Print (L"  UefiTool.efi -SGDT\n\n");
   Print (L"Read CR register:\n");
   Print (L"  UefiTool.efi -CR\n\n");
+  Print (L"Dump memory to file:\n");
+  Print (L"  UefiTool.efi DUMPMEM [Address] [Size] [File]\n\n");
 }
 
 /**
@@ -204,12 +212,51 @@ ApUtReadCpuId (
   Print (L"EDX = 0x%08X\n\n", RegisterEdx);
 }
 
-VOID
+EFI_STATUS
+EFIAPI
+SaveFileToDisk (
+  IN  CHAR16              *FileName,
+  IN  UINTN               BufferSize,
+  IN  VOID                *Buffer
+  )
+{
+  EFI_STATUS           Status;
+  SHELL_FILE_HANDLE    FileHandle;
+
+  if (!EFI_ERROR (ShellFileExists (FileName))) {
+    ShellDeleteFileByName (FileName);
+  }
+
+  Status = ShellOpenFileByName (
+             FileName,
+             &FileHandle,
+             EFI_FILE_MODE_READ | EFI_FILE_MODE_WRITE | EFI_FILE_MODE_CREATE,
+             0
+             );
+  if (EFI_ERROR (Status)) {
+    Print (L"Open file failed: %r\n", Status);
+    return Status;
+  }
+
+  Status = ShellWriteFile (FileHandle, &BufferSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    Print (L"Write file failed: %r\n", Status);
+    ShellCloseFile (&FileHandle);
+    return Status;
+  }
+
+  ShellCloseFile (&FileHandle);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
 EFIAPI
 UefiToolRoutine (
   UINT64             Opcode
   )
 {
+  EFI_STATUS         Status;
   UINT64             MsrData;
   UINT32             RegisterEax;
   UINT32             RegisterEbx;
@@ -429,6 +476,20 @@ UefiToolRoutine (
     }
   }
 
+  //
+  // Dump memory to file
+  //
+  if (Opcode == OPCODE_DUMPMEM_BIT) {
+    Status = SaveFileToDisk (gUtContext.DumpMemFile, gUtContext.DumpMemSize, (UINT8 *) gUtContext.DumpMemAddress);
+    if (EFI_ERROR (Status)) {
+      Print (L"Save memory to file failed.\n");
+      return Status;
+    }
+
+    Print (L"Save memory to %s Passed.\n", gUtContext.DumpMemFile);
+  }
+
+  return EFI_SUCCESS;
 }
 
 /**
@@ -457,7 +518,7 @@ ShellAppMain (
   UINT64                    Opcode;
 
   Print (L"\nUEFI Debug Tool. Version: 1.0.0.1\n");
-  Print (L"Copyright (c) 2017 - 2019 Gavin Xue. All rights reserved.\n\n");
+  Print (L"Copyright (c) 2017 - 2020 Gavin Xue. All rights reserved.\n\n");
 
   Opcode = 0x0;
   SetMem (&gUtContext, sizeof (UEFI_TOOL_CONTEXT), 0x0);
@@ -534,8 +595,13 @@ ShellAppMain (
     } else if ((Index < Argc) && (StrCmp (Argv[Index], L"-IO") == 0)) {
       gUtContext.MmAccessType = 1;
       Index++;
+    } else if ((Index + 3 < Argc) && (StrCmp (Argv[Index], L"DUMPMEM") == 0)) {
+      gUtContext.DumpMemAddress = StrHexToUintn (Argv[Index + 1]);
+      gUtContext.DumpMemSize    = StrHexToUintn (Argv[Index + 2]);
+      CopyMem (gUtContext.DumpMemFile, Argv[Index + 3], sizeof (Argv[Index + 3]));
+      Index += 4;
+      Opcode |= OPCODE_DUMPMEM_BIT;
     }
-
     else {
       Index++;
     }
