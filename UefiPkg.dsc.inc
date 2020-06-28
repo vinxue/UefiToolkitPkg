@@ -18,6 +18,7 @@
   TeeDevLib|UefiPkg/Library/TeeDevLib/TeeDevLib.inf
   TeeDrvLib|UefiPkg/Library/TeeDrvLib/TeeDrvLib.inf
   TeeClientApiLib|UefiPkg/Library/TeeClientApiLib/TeeClientApiLib.inf
+  TeeAvbCaLib|UefiPkg/Library/TeeAvbCaLib/TeeAvbCaLib.inf
 
 [Components.X64]
   UefiPkg/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
@@ -35,6 +36,7 @@
   UefiPkg/Application/GenGuid/GenGuid.inf
   UefiPkg/Application/TeeApp/TeeApp.inf
   UefiPkg/Application/OtaUpdate/OtaUpdate.inf
+  UefiPkg/Application/TeeAvb/TeeAvb.inf
 
 [Components.IA32]
   UefiPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
