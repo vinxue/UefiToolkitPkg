@@ -1,7 +1,7 @@
 /** @file
   A simple UEFI tool for disk partition read/write.
 
-  Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
+  Copyright (c) 2019 - 2020, Gavin Xue. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -655,6 +655,66 @@ WritePartition (
   }
 
   BlockIo->FlushBlocks (BlockIo);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
+SavePartitionData (
+  IN CHAR8          *PartitionName,
+  IN CHAR16         *FileName
+  )
+{
+  EFI_STATUS               Status;
+  EFI_BLOCK_IO_PROTOCOL    *BlockIo;
+  EFI_DISK_IO_PROTOCOL     *DiskIo;
+  UINT32                   MediaId;
+  UINTN                    PartitionSize;
+  VOID                     *Buffer;
+
+  Buffer = NULL;
+
+  Status = OpenPartition (PartitionName, &BlockIo, &DiskIo);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  //
+  // Check read partition size will fit on device.
+  //
+  PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+  if (PartitionSize > SIZE_2GB) {
+    DEBUG ((DEBUG_ERROR, "Partition is too big. Size: 0x%x\n", PartitionSize));
+    return EFI_VOLUME_FULL;
+  }
+
+  MediaId = BlockIo->Media->MediaId;
+
+  Buffer = AllocateZeroPool (PartitionSize);
+  if (Buffer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = DiskIo->ReadDisk (DiskIo, MediaId, 0, PartitionSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    FreePool (Buffer);
+    return Status;
+  }
+
+  Status = SaveFileToDisk (FileName, PartitionSize, Buffer);
+  if (EFI_ERROR (Status)) {
+    if (Buffer != NULL) {
+      FreePool (Buffer);
+      Buffer = NULL;
+    }
+    return Status;
+  }
+
+  if (Buffer != NULL) {
+    FreePool (Buffer);
+    Buffer = NULL;
+  }
 
   return EFI_SUCCESS;
 }
@@ -1319,11 +1379,12 @@ ShowHelpInfo (
   )
 {
   Print (L"\nUEFI Partition Editor. Version: 1.1.0.0.\n");
-  Print (L"Copyright (c) 2019 Gavin Xue. All rights reserved.\n\n");
+  Print (L"Copyright (c) 2019 - 2020 Gavin Xue. All rights reserved.\n\n");
   Print (L"Help info:\n");
   Print (L"  PartEdit.efi -d (Dump parent disk info)\n");
   Print (L"  PartEdit.efi read partname offset size\n");
   Print (L"  PartEdit.efi flash partname filename\n");
+  Print (L"  PartEdit.efi savepart partname\n");
   Print (L"  PartEdit.efi erase partname\n");
   Print (L"  PartEdit.efi gpt erase\n");
   Print (L"  PartEdit.efi gpt save\n");
@@ -1356,6 +1417,7 @@ ShellAppMain (
 {
   EFI_STATUS                Status;
   CHAR8                     PartitionName[36];
+  CHAR16                    FileName[36];
   UINTN                     Offset;
   VOID                      *Buffer;
   UINTN                     BufferSize;
@@ -1466,6 +1528,22 @@ ShellAppMain (
         return Status;
       }
 
+      return EFI_SUCCESS;
+    }
+
+    //
+    // Save Partition data to a file.
+    //
+    if ((!StrCmp (Argv[1], L"savepart")) || (!StrCmp (Argv[1], L"SAVEPART"))) {
+      UnicodeSPrint (FileName, 36, L"%s.bin", Argv[2]);
+      UnicodeStrToAsciiStrS (Argv[2], PartitionName, ARRAY_SIZE (PartitionName));
+      Status = SavePartitionData (PartitionName, FileName);
+      if (EFI_ERROR (Status)) {
+        Print (L"Save partition data failed: %r\n", Status);
+        return Status;
+      }
+
+      Print (L"Save partition data to %s Passed.\n", FileName);
       return EFI_SUCCESS;
     }
 
