@@ -1,5 +1,5 @@
 ## @file
-# Provides driver and definitions to build UefiPkg in EDKII bios.
+# Provides driver and definitions to build UefiPubPkg in EDKII bios.
 #
 # Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under
@@ -14,7 +14,7 @@
 
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
-  PACKAGE_NAME                   = UefiPkg
+  PACKAGE_NAME                   = UefiPubPkg
   PACKAGE_GUID                   = F6E826D7-39F2-463C-88CE-20476176696E
   PACKAGE_VERSION                = 0.1
 

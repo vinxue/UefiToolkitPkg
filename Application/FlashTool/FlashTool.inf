@@ -28,7 +28,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   ShellPkg/ShellPkg.dec
-  UefiPkg/UefiPkg.dec
+  UefiPubPkg/UefiPkg.dec
 
 [LibraryClasses]
   UefiLib

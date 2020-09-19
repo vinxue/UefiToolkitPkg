@@ -1,5 +1,5 @@
 ## @file
-# UefiPkg DSC include file for Platform DSC.
+# UefiPubPkg DSC include file for Platform DSC.
 #
 # Copyright (c) 2019 - 2020, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under
@@ -13,30 +13,24 @@
 ##
 
 [LibraryClasses]
-  PlatformFlashAccessLib|UefiPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
-  RamDebugLib|UefiPkg/Library/RamDebugLib/RamDebugLib.inf
-  TeeDevLib|UefiPkg/Library/TeeDevLib/TeeDevLib.inf
-  TeeDrvLib|UefiPkg/Library/TeeDrvLib/TeeDrvLib.inf
-  TeeClientApiLib|UefiPkg/Library/TeeClientApiLib/TeeClientApiLib.inf
-  TeeAvbCaLib|UefiPkg/Library/TeeAvbCaLib/TeeAvbCaLib.inf
+  PlatformFlashAccessLib|UefiPubPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
+  RamDebugLib|UefiPubPkg/Library/RamDebugLib/RamDebugLib.inf
 
 [Components.X64]
-  UefiPkg/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
-  UefiPkg/Drivers/Dxe/UefiConsole/UefiConsole.inf
-  UefiPkg/Application/UefiTool/UefiTool.inf
-  UefiPkg/Application/TcpTransport/TcpTransport.inf
-  UefiPkg/Application/PartEdit/PartEdit.inf
-  UefiPkg/Application/FlashTool/FlashTool.inf
-  UefiPkg/Application/UefiAvb/UefiAvb.inf
-  UefiPkg/Application/GptGen/GptGen.inf
-  UefiPkg/Application/TscFreq/TscFreq.inf
-  UefiPkg/Application/GopVer/GopVer.inf
-  UefiPkg/Application/DumpLog/DumpLog.inf
-  UefiPkg/Application/IshSlot/IshSlot.inf
-  UefiPkg/Application/GenGuid/GenGuid.inf
-  UefiPkg/Application/TeeApp/TeeApp.inf
-  UefiPkg/Application/OtaUpdate/OtaUpdate.inf
-  UefiPkg/Application/TeeAvb/TeeAvb.inf
+  UefiPubPkg/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
+  UefiPubPkg/Drivers/Dxe/UefiConsole/UefiConsole.inf
+  UefiPubPkg/Application/UefiTool/UefiTool.inf
+  UefiPubPkg/Application/TcpTransport/TcpTransport.inf
+  UefiPubPkg/Application/PartEdit/PartEdit.inf
+  UefiPubPkg/Application/FlashTool/FlashTool.inf
+  UefiPubPkg/Application/UefiAvb/UefiAvb.inf
+  UefiPubPkg/Application/GptGen/GptGen.inf
+  UefiPubPkg/Application/TscFreq/TscFreq.inf
+  UefiPubPkg/Application/GopVer/GopVer.inf
+  UefiPubPkg/Application/DumpLog/DumpLog.inf
+  UefiPubPkg/Application/IshSlot/IshSlot.inf
+  UefiPubPkg/Application/GenGuid/GenGuid.inf
+  UefiPubPkg/Application/OtaUpdate/OtaUpdate.inf
 
 [Components.IA32]
-  UefiPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
+  UefiPubPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
