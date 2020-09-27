@@ -60,7 +60,7 @@
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
   IoLib|MdePkg/Library/BaseIoLibIntrinsic/BaseIoLibIntrinsic.inf
   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
-
+  HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
 
 [LibraryClasses.common.PEIM]
   PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
