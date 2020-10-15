@@ -1599,7 +1599,7 @@ ShellAppMain (
 
       Status = ReadPartition (PartitionName, Offset, Buffer, BufferSize);
       if (EFI_ERROR (Status)) {
-        Print (L"Read partition %s failed.\n", PartitionName);
+        Print (L"Read partition %a failed.\n", PartitionName);
         return Status;
       }
 
