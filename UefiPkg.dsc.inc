@@ -31,6 +31,7 @@
   UefiPubPkg/Application/IshSlot/IshSlot.inf
   UefiPubPkg/Application/GenGuid/GenGuid.inf
   UefiPubPkg/Application/OtaUpdate/OtaUpdate.inf
+  UefiPubPkg/Application/AmdCpuFreq/AmdCpuFreq.inf
 
 [Components.IA32]
   UefiPubPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
