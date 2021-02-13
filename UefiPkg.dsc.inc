@@ -32,6 +32,7 @@
   UefiPubPkg/Application/GenGuid/GenGuid.inf
   UefiPubPkg/Application/OtaUpdate/OtaUpdate.inf
   UefiPubPkg/Application/AmdCpuFreq/AmdCpuFreq.inf
+  UefiPubPkg/Application/Smn/Smn.inf
 
 [Components.IA32]
   UefiPubPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
