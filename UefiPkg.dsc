@@ -1,7 +1,7 @@
 ## @file
 # Provides driver and definitions to build UefiPubPkg in EDKII bios.
 #
-# Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
+# Copyright (c) 2019 - 2021, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under
 # the terms and conditions of the BSD License that accompanies this distribution.
 # The full text of the license may be found at
@@ -22,10 +22,12 @@
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
 
-  #
-  # UefiPubPkg DSC include file
-  #
-  !include UefiPubPkg/UefiPkg.dsc.inc
+#
+# UefiPubPkg DSC include file
+#
+!include UefiPubPkg/UefiPkg.dsc.inc
+
+!include MdePkg/MdeLibs.dsc.inc
 
 [LibraryClasses]
   DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf

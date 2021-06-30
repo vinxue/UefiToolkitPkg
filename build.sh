@@ -5,14 +5,13 @@ pushd "$BUILDDIR" >/dev/null
 BUILDDIR=$(pwd)
 popd >/dev/null
 
-if [ "$(which gcc)" = "" ] || [ "$(which nasm)" = "" ] || [ "$(which iasl)" = "" ]]; then
-  echo "Install required software from apt..."
-  sudo apt update || exit 1
-  sudo apt install build-essential uuid-dev iasl gcc-5 nasm || exit 1
-fi
+echo "Install required software from apt..."
+sudo apt update || exit 1
+sudo apt install build-essential uuid-dev iasl nasm || exit 1
 
-git clone https://github.com/tianocore/edk2 -b UDK2018
+git clone https://github.com/tianocore/edk2
 cd edk2
+git submodule update --init
 
 if [ ! -d UefiPubPkg ]; then
   ln -s .. UefiPubPkg || exit 1
