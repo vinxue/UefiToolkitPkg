@@ -1,7 +1,7 @@
 ## @file
 # UefiPubPkg DSC include file for Platform DSC.
 #
-# Copyright (c) 2019 - 2020, Gavin Xue. All rights reserved.<BR>
+# Copyright (c) 2019 - 2021, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under
 # the terms and conditions of the BSD License that accompanies this distribution.
 # The full text of the license may be found at
@@ -33,6 +33,7 @@
   UefiPubPkg/Application/OtaUpdate/OtaUpdate.inf
   UefiPubPkg/Application/AmdCpuFreq/AmdCpuFreq.inf
   UefiPubPkg/Application/Smn/Smn.inf
+  UefiPubPkg/Application/RamDiskApp/RamDiskApp.inf
 
 [Components.IA32]
   UefiPubPkg/Drivers/Pei/RawDataInit/RawDataInit.inf

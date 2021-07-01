@@ -1,0 +1,44 @@
+##  @file
+#  This is the UEFI application
+#
+#  Copyright (c) 2021, Gavin Xue. All rights reserved.<BR>
+#
+#  This program and the accompanying materials
+#  are licensed and made available under the terms and conditions of the BSD License
+#  which accompanies this distribution. The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RamDiskApp
+  FILE_GUID                      = F71EF746-1D3A-4261-972F-3BA0111E9136
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ShellCEntryLib
+
+[Sources]
+  RamDiskApp.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+  UefiLib
+  BaseLib
+  ShellLib
+  ShellCEntryLib
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  BaseMemoryLib
+
+[Guids]
+  gEfiVirtualDiskGuid
+
+[Protocols]
+  gEfiRamDiskProtocolGuid
