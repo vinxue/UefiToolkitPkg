@@ -34,6 +34,7 @@
   UefiPubPkg/Application/AmdCpuFreq/AmdCpuFreq.inf
   UefiPubPkg/Application/Smn/Smn.inf
   UefiPubPkg/Application/RamDiskApp/RamDiskApp.inf
+  UefiPubPkg/Application/Cpuid/Cpuid.inf
 
 [Components.IA32]
   UefiPubPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
