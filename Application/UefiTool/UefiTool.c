@@ -1,7 +1,7 @@
 /** @file
   A simple UEFI tool for debugging.
 
-  Copyright (c) 2017 - 2020, Gavin Xue. All rights reserved.<BR>
+  Copyright (c) 2017 - 2021, Gavin Xue. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -45,16 +45,17 @@ StrUpr (
 //
 // Bits definition of Command flag list
 //
-#define OPCODE_RDMSR_BIT                      BIT0
-#define OPCODE_WRMSR_BIT                      BIT1
-#define OPCODE_CPUID_BIT                      BIT2
-#define OPCODE_ALLPROCESSOR_BIT               BIT3
-#define OPCODE_PROCESSOR_INDEX_BIT            BIT4
-#define OPCODE_SGDT_BIT                       BIT5
-#define OPCODE_CR_BIT                         BIT6
-#define OPCODE_RMM_BIT                        BIT7
-#define OPCODE_WMM_BIT                        BIT8
-#define OPCODE_DUMPMEM_BIT                    BIT9
+#define OPCODE_RDMSR_BIT                      BIT0    // Read MSR register
+#define OPCODE_WRMSR_BIT                      BIT1    // Write MSR register
+#define OPCODE_CPUID_BIT                      BIT2    // Read MSR
+#define OPCODE_ALLPROCESSOR_BIT               BIT3    // Support run routine on All processors
+#define OPCODE_PROCESSOR_INDEX_BIT            BIT4    // Support run routine on a specific AP
+#define OPCODE_SGDT_BIT                       BIT5    // Read GDTR
+#define OPCODE_CR_BIT                         BIT6    // Read CR registers
+#define OPCODE_RMM_BIT                        BIT7    // Read MMIO/IO
+#define OPCODE_WMM_BIT                        BIT8    // Write MMIO/IO
+#define OPCODE_DUMPMEM_BIT                    BIT9    // Dump memory region to a file
+#define OPCODE_UCODE_BIT                      BIT10   // Get CPU Microcode signature/version
 
 typedef struct {
   // MSR
@@ -99,6 +100,8 @@ ShowHelpInfo(
   Print (L"  UefiTool.efi -SGDT\n\n");
   Print (L"Read CR register:\n");
   Print (L"  UefiTool.efi -CR\n\n");
+  Print (L"Get Microcode signature:\n");
+  Print (L"  UefiTool.efi -UC\n\n");
   Print (L"Dump memory to file:\n");
   Print (L"  UefiTool.efi DUMPMEM [Address] [Size] [File]\n\n");
 }
@@ -248,6 +251,44 @@ SaveFileToDisk (
   ShellCloseFile (&FileHandle);
 
   return EFI_SUCCESS;
+}
+
+/**
+  Get microcode update signature of currently loaded microcode update.
+
+  @return  Microcode signature.
+
+**/
+UINT32
+GetCurrentMicrocodeSignature (
+  VOID
+  )
+{
+  MSR_IA32_BIOS_SIGN_ID_REGISTER   BiosSignIdMsr;
+
+  AsmWriteMsr64 (MSR_IA32_BIOS_SIGN_ID, 0);
+  AsmCpuid (CPUID_VERSION_INFO, NULL, NULL, NULL, NULL);
+  BiosSignIdMsr.Uint64 = AsmReadMsr64 (MSR_IA32_BIOS_SIGN_ID);
+
+  return BiosSignIdMsr.Bits.MicrocodeUpdateSignature;
+}
+
+/**
+  The function to be run on the designated AP of the system to get CPU Microcode signature.
+
+  @param[in]  Index         The handle index of the AP.
+
+**/
+VOID
+ApUtGetMicrocodeSignature (
+  IN UINTN             *Index
+  )
+{
+  Print (L"Microcode Signature [ProcNum: %d S%d_C%d_T%d]: 0x%08X\n", *Index,
+    mProcessorLocBuf[*Index].Location.Package,
+    mProcessorLocBuf[*Index].Location.Core,
+    mProcessorLocBuf[*Index].Location.Thread,
+    GetCurrentMicrocodeSignature ());
 }
 
 EFI_STATUS
@@ -489,6 +530,31 @@ UefiToolRoutine (
     Print (L"Save memory to %s Passed.\n", gUtContext.DumpMemFile);
   }
 
+  //
+  // Get microcode update signature
+  //
+  if (Opcode == OPCODE_UCODE_BIT) {
+    for (Index = 0; Index < mProcessorNum; Index++) {
+      if (Index == mBspIndex) {
+        Print (L"Microcode Signature [ProcNum: %d S%d_C%d_T%d]: 0x%08X\n", Index,
+          mProcessorLocBuf[Index].Location.Package,
+          mProcessorLocBuf[Index].Location.Core,
+          mProcessorLocBuf[Index].Location.Thread,
+          GetCurrentMicrocodeSignature ());
+      } else {
+        mMpService->StartupThisAP (
+                      mMpService,
+                      (EFI_AP_PROCEDURE) ApUtGetMicrocodeSignature,
+                      Index,
+                      NULL,
+                      0,
+                      &Index,
+                      NULL
+                      );
+      }
+    }
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -517,8 +583,8 @@ ShellAppMain (
   UINT8                     Index;
   UINT64                    Opcode;
 
-  Print (L"\nUEFI Debug Tool. Version: 1.0.0.1\n");
-  Print (L"Copyright (c) 2017 - 2020 Gavin Xue. All rights reserved.\n\n");
+  Print (L"\nUEFI Debug Tool. Version: 1.0.0.2\n");
+  Print (L"Copyright (c) 2017 - 2021 Gavin Xue. All rights reserved.\n\n");
 
   Opcode = 0x0;
   SetMem (&gUtContext, sizeof (UEFI_TOOL_CONTEXT), 0x0);
@@ -540,6 +606,8 @@ ShellAppMain (
       Opcode |= OPCODE_SGDT_BIT;
     } else if ((!StrCmp (Argv[1], L"/CR")) || (!StrCmp (Argv[1], L"-CR"))) {
       Opcode |= OPCODE_CR_BIT;
+    } else if ((!StrCmp (Argv[1], L"/UC")) || (!StrCmp (Argv[1], L"-UC"))) {
+      Opcode |= OPCODE_UCODE_BIT;
     } else {
       Print (L"Invaild parameter.\n");
       return EFI_INVALID_PARAMETER;

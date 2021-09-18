@@ -25,6 +25,8 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/IoLib.h>
+#include <Register/Intel/Cpuid.h>
+#include <Register/Intel/Msr.h>
 #include <Protocol/MpService.h>
 
 #endif
