@@ -1,5 +1,5 @@
 ## @file
-# UefiPubPkg DSC include file for Platform DSC.
+# UefiPkg DSC include file for Platform DSC.
 #
 # Copyright (c) 2019 - 2021, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under
@@ -13,28 +13,28 @@
 ##
 
 [LibraryClasses]
-  PlatformFlashAccessLib|UefiPubPkg/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
-  RamDebugLib|UefiPubPkg/Library/RamDebugLib/RamDebugLib.inf
+  PlatformFlashAccessLib|$(UEFI_PACKAGE)/Library/PlatformFlashAccessLib/PlatformFlashAccessLib.inf
+  RamDebugLib|$(UEFI_PACKAGE)/Library/RamDebugLib/RamDebugLib.inf
 
 [Components.X64]
-  UefiPubPkg/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
-  UefiPubPkg/Drivers/Dxe/UefiConsole/UefiConsole.inf
-  UefiPubPkg/Application/UefiTool/UefiTool.inf
-  UefiPubPkg/Application/TcpTransport/TcpTransport.inf
-  UefiPubPkg/Application/PartEdit/PartEdit.inf
-  UefiPubPkg/Application/FlashTool/FlashTool.inf
-  UefiPubPkg/Application/UefiAvb/UefiAvb.inf
-  UefiPubPkg/Application/GptGen/GptGen.inf
-  UefiPubPkg/Application/TscFreq/TscFreq.inf
-  UefiPubPkg/Application/GopVer/GopVer.inf
-  UefiPubPkg/Application/DumpLog/DumpLog.inf
-  UefiPubPkg/Application/IshSlot/IshSlot.inf
-  UefiPubPkg/Application/GenGuid/GenGuid.inf
-  UefiPubPkg/Application/OtaUpdate/OtaUpdate.inf
-  UefiPubPkg/Application/AmdCpuFreq/AmdCpuFreq.inf
-  UefiPubPkg/Application/Smn/Smn.inf
-  UefiPubPkg/Application/RamDiskApp/RamDiskApp.inf
-  UefiPubPkg/Application/Cpuid/Cpuid.inf
+  $(UEFI_PACKAGE)/Drivers/Dxe/PrintScreenLogger/PrintScreenLogger.inf
+  $(UEFI_PACKAGE)/Drivers/Dxe/UefiConsole/UefiConsole.inf
+  $(UEFI_PACKAGE)/Application/UefiTool/UefiTool.inf
+  $(UEFI_PACKAGE)/Application/TcpTransport/TcpTransport.inf
+  $(UEFI_PACKAGE)/Application/PartEdit/PartEdit.inf
+  $(UEFI_PACKAGE)/Application/FlashTool/FlashTool.inf
+  $(UEFI_PACKAGE)/Application/UefiAvb/UefiAvb.inf
+  $(UEFI_PACKAGE)/Application/GptGen/GptGen.inf
+  $(UEFI_PACKAGE)/Application/TscFreq/TscFreq.inf
+  $(UEFI_PACKAGE)/Application/GopVer/GopVer.inf
+  $(UEFI_PACKAGE)/Application/DumpLog/DumpLog.inf
+  $(UEFI_PACKAGE)/Application/IshSlot/IshSlot.inf
+  $(UEFI_PACKAGE)/Application/GenGuid/GenGuid.inf
+  $(UEFI_PACKAGE)/Application/OtaUpdate/OtaUpdate.inf
+  $(UEFI_PACKAGE)/Application/AmdCpuFreq/AmdCpuFreq.inf
+  $(UEFI_PACKAGE)/Application/Smn/Smn.inf
+  $(UEFI_PACKAGE)/Application/RamDiskApp/RamDiskApp.inf
+  $(UEFI_PACKAGE)/Application/Cpuid/Cpuid.inf
 
 [Components.IA32]
-  UefiPubPkg/Drivers/Pei/RawDataInit/RawDataInit.inf
+  $(UEFI_PACKAGE)/Drivers/Pei/RawDataInit/RawDataInit.inf

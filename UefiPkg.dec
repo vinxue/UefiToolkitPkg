@@ -1,5 +1,5 @@
 ## @file
-# Provides driver and definitions to build UefiPubPkg in EDKII bios.
+# Provides driver and definitions to build UefiPkg in EDKII bios.
 #
 # Copyright (c) 2019, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under

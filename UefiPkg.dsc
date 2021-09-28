@@ -1,5 +1,5 @@
 ## @file
-# Provides driver and definitions to build UefiPubPkg in EDKII bios.
+# Provides driver and definitions to build UefiPkg in EDKII bios.
 #
 # Copyright (c) 2019 - 2021, Gavin Xue. All rights reserved.<BR>
 # This program and the accompanying materials are licensed and made available under
@@ -13,19 +13,22 @@
 ##
 
 [Defines]
-  PLATFORM_NAME                  = UefiPubPkg
+  DEFINE  UEFI_PACKAGE           = UefiPubPkg
+
+[Defines]
+  PLATFORM_NAME                  = $(UEFI_PACKAGE)
   PLATFORM_GUID                  = 4E79C015-80E9-4838-BE3C-A60D39B559B4
   PLATFORM_VERSION               = 0.1
   DSC_SPECIFICATION              = 0x00010005
-  OUTPUT_DIRECTORY               = Build/UefiPubPkg
+  OUTPUT_DIRECTORY               = Build/$(UEFI_PACKAGE)
   SUPPORTED_ARCHITECTURES        = IA32|X64
   BUILD_TARGETS                  = DEBUG|RELEASE
   SKUID_IDENTIFIER               = DEFAULT
 
 #
-# UefiPubPkg DSC include file
+# UefiPkg DSC include file
 #
-!include UefiPubPkg/UefiPkg.dsc.inc
+!include $(UEFI_PACKAGE)/UefiPkg.dsc.inc
 
 !include MdePkg/MdeLibs.dsc.inc
 
