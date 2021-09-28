@@ -13,7 +13,7 @@
 ##
 
 [Defines]
-  DEFINE  UEFI_PACKAGE           = UefiPubPkg
+  DEFINE  UEFI_PACKAGE           = UefiToolkitPkg
 
 [Defines]
   PLATFORM_NAME                  = $(UEFI_PACKAGE)

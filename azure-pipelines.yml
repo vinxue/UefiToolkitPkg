@@ -22,7 +22,7 @@ jobs:
 
   steps:
   - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
-    path: UefiPubPkg
+    path: UefiToolkitPkg
 
   - powershell: |
       $PYTHON3_PATH = ((Get-Item C:\hostedtoolcache\windows\Python\3*\x64) | Sort-Object -Descending)[0].FullName
@@ -36,16 +36,16 @@ jobs:
       cd edk2
       git submodule update --init
       cd..
-      xcopy /e /y UefiPubPkg edk2\UefiPubPkg\
+      xcopy /e /y UefiToolkitPkg edk2\UefiToolkitPkg\
       cd edk2
       set PYTHON_HOME=$(PYTHON3)
-      set NASM_PREFIX=%cd%\UefiPubPkg\Tools\Nasm\
+      set NASM_PREFIX=%cd%\UefiToolkitPkg\Tools\Nasm\
       call edksetup.bat rebuild
-      call build -a IA32 -a X64 -b RELEASE -t VS2019 -p UefiPubPkg\UefiPkg.dsc
+      call build -a IA32 -a X64 -b RELEASE -t VS2019 -p UefiToolkitPkg\UefiPkg.dsc
     displayName: 'Run a Windows build script'
 
   - script:
-      xcopy /y ..\edk2\Build\UefiPubPkg\RELEASE_VS2019\X64\*.efi $(Build.ArtifactStagingDirectory)\
+      xcopy /y ..\edk2\Build\UefiToolkitPkg\RELEASE_VS2019\X64\*.efi $(Build.ArtifactStagingDirectory)\
     displayName: 'Copy build files to Artifact'
 
   - task: PublishBuildArtifacts@1
@@ -60,7 +60,7 @@ jobs:
 
   steps:
   - checkout: self  # self represents the repo where the initial Pipelines YAML file was found
-    path: UefiPubPkg
+    path: UefiToolkitPkg
 
   - script: |
       chmod +x build.sh
@@ -68,7 +68,7 @@ jobs:
     displayName: 'Run a Linux build script'
 
   - script: |
-      cp edk2/Build/UefiPubPkg/RELEASE_GCC5/X64/*.efi $(Build.ArtifactStagingDirectory)/
+      cp edk2/Build/UefiToolkitPkg/RELEASE_GCC5/X64/*.efi $(Build.ArtifactStagingDirectory)/
     displayName: 'Copy build files to Artifact'
 
   - task: PublishBuildArtifacts@1

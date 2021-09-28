@@ -31,7 +31,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  UefiPubPkg/UefiPkg.dec
+  UefiToolkitPkg/UefiPkg.dec
 
 [LibraryClasses]
   BaseLib
