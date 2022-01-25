@@ -1,7 +1,7 @@
 /** @file
   A simple UEFI tool for debugging.
 
-  Copyright (c) 2017 - 2021, Gavin Xue. All rights reserved.<BR>
+  Copyright (c) 2017 - 2022, Gavin Xue. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -101,7 +101,7 @@ ShowHelpInfo(
   Print (L"Read CR register:\n");
   Print (L"  UefiTool.efi -CR\n\n");
   Print (L"Get Microcode signature:\n");
-  Print (L"  UefiTool.efi -UC\n\n");
+  Print (L"  UefiTool.efi -MCU\n\n");
   Print (L"Dump memory to file:\n");
   Print (L"  UefiTool.efi DUMPMEM [Address] [Size] [File]\n\n");
 }
@@ -109,9 +109,6 @@ ShowHelpInfo(
 /**
   Get All processors EFI_CPU_LOCATION in system. LocationBuf is allocated inside the function
   Caller is responsible to free LocationBuf.
-
-  @param[out] LocationBuf          Returns Processor Location Buffer.
-  @param[out] Num                  Returns processor number.
 
   @retval EFI_SUCCESS              Operation completed successfully.
   @retval EFI_UNSUPPORTED          MpService protocol not found.
@@ -180,39 +177,21 @@ GetProcessorsCpuLocation (
 
 VOID
 ApUtReadMsr (
-  IN UINTN             *Index
+  OUT UINT64             *MsrData
   )
 {
-  UINT64             MsrData;
-
-  MsrData = AsmReadMsr64 (gUtContext.MsrIndex);
-  Print (L"RDMSR[0x%X][ProcNum: %d S%d_C%d_T%d]: [64b] 0x%016lX\n", gUtContext.MsrIndex, *Index,
-    mProcessorLocBuf[*Index].Location.Package,
-    mProcessorLocBuf[*Index].Location.Core,
-    mProcessorLocBuf[*Index].Location.Thread,
-    MsrData);
+  *MsrData = AsmReadMsr64 (gUtContext.MsrIndex);
 }
 
 VOID
 ApUtReadCpuId (
-  IN UINTN             *Index
+  OUT VOID             *Buffer
   )
 {
-  UINT32             RegisterEax;
-  UINT32             RegisterEbx;
-  UINT32             RegisterEcx;
-  UINT32             RegisterEdx;
+  UT_CPUID_REGISTER    *CpuidRegister;
 
-  AsmCpuidEx (gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex, &RegisterEax, &RegisterEbx, &RegisterEcx, &RegisterEdx);
-  Print (L"CPUID[S%d_C%d_T%d]: Index: 0x%X     SubIndex: 0x%X\n",
-  mProcessorLocBuf[*Index].Location.Package,
-  mProcessorLocBuf[*Index].Location.Core,
-  mProcessorLocBuf[*Index].Location.Thread,
-  gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex);
-  Print (L"EAX = 0x%08X\n", RegisterEax);
-  Print (L"EBX = 0x%08X\n", RegisterEbx);
-  Print (L"ECX = 0x%08X\n", RegisterEcx);
-  Print (L"EDX = 0x%08X\n\n", RegisterEdx);
+  CpuidRegister = (UT_CPUID_REGISTER *) Buffer;
+  AsmCpuidEx (gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex, &CpuidRegister->Eax, &CpuidRegister->Ebx, &CpuidRegister->Ecx, &CpuidRegister->Edx);
 }
 
 EFI_STATUS
@@ -281,14 +260,10 @@ GetCurrentMicrocodeSignature (
 **/
 VOID
 ApUtGetMicrocodeSignature (
-  IN UINTN             *Index
+  OUT UINT32             *CurrentMicrocodeSignature
   )
 {
-  Print (L"Microcode Signature [ProcNum: %d S%d_C%d_T%d]: 0x%08X\n", *Index,
-    mProcessorLocBuf[*Index].Location.Package,
-    mProcessorLocBuf[*Index].Location.Core,
-    mProcessorLocBuf[*Index].Location.Thread,
-    GetCurrentMicrocodeSignature ());
+  *CurrentMicrocodeSignature = GetCurrentMicrocodeSignature ();
 }
 
 EFI_STATUS
@@ -299,13 +274,11 @@ UefiToolRoutine (
 {
   EFI_STATUS         Status;
   UINT64             MsrData;
-  UINT32             RegisterEax;
-  UINT32             RegisterEbx;
-  UINT32             RegisterEcx;
-  UINT32             RegisterEdx;
   UINTN              Index;
   IA32_DESCRIPTOR    GdtrDesc;
   UINTN              Data;
+  UT_CPUID_REGISTER  CpuidRegister;
+  UINT32             CurrentMicrocodeSignature;
 
   //
   // Read a MSR register
@@ -327,12 +300,12 @@ UefiToolRoutine (
   // Retrieves CPUID information for BSP
   //
   if (Opcode == OPCODE_CPUID_BIT) {
-    AsmCpuidEx (gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex, &RegisterEax, &RegisterEbx, &RegisterEcx, &RegisterEdx);
+    AsmCpuidEx (gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex, &CpuidRegister.Eax, &CpuidRegister.Ebx, &CpuidRegister.Ecx, &CpuidRegister.Edx);
     Print (L"CPUID Index: 0x%X     SubIndex: 0x%X\n", gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex);
-    Print (L"EAX = 0x%08X\n", RegisterEax);
-    Print (L"EBX = 0x%08X\n", RegisterEbx);
-    Print (L"ECX = 0x%08X\n", RegisterEcx);
-    Print (L"EDX = 0x%08X\n", RegisterEdx);
+    Print (L"EAX = 0x%08X\n", CpuidRegister.Eax);
+    Print (L"EBX = 0x%08X\n", CpuidRegister.Ebx);
+    Print (L"ECX = 0x%08X\n", CpuidRegister.Ecx);
+    Print (L"EDX = 0x%08X\n", CpuidRegister.Edx);
   }
 
   //
@@ -359,12 +332,9 @@ UefiToolRoutine (
   //
   if (Opcode == (OPCODE_RDMSR_BIT | OPCODE_PROCESSOR_INDEX_BIT)) {
     Index = gUtContext.ProcessorIndex;
+    MsrData = 0;
     if (Index == mBspIndex) {
-      Print (L"RDMSR[0x%X][ProcNum: %d S%d_C%d_T%d]: [64b] 0x%16lX\n", gUtContext.MsrIndex, Index,
-        mProcessorLocBuf[Index].Location.Package,
-        mProcessorLocBuf[Index].Location.Core,
-        mProcessorLocBuf[Index].Location.Thread,
-        AsmReadMsr64 (gUtContext.MsrIndex));
+        MsrData = AsmReadMsr64 (gUtContext.MsrIndex);
     } else {
       mMpService->StartupThisAP (
                     mMpService,
@@ -372,10 +342,16 @@ UefiToolRoutine (
                     Index,
                     NULL,
                     0,
-                    &Index,
+                    (UINT64 *) &MsrData,
                     NULL
                     );
     }
+
+    Print (L"RDMSR[0x%X][ProcNum: %d S%d_C%d_T%d]: [64b] 0x%016lX\n", gUtContext.MsrIndex, Index,
+      mProcessorLocBuf[Index].Location.Package,
+      mProcessorLocBuf[Index].Location.Core,
+      mProcessorLocBuf[Index].Location.Thread,
+      MsrData);
   }
 
   //
@@ -383,12 +359,9 @@ UefiToolRoutine (
   //
   if (Opcode == (OPCODE_RDMSR_BIT | OPCODE_ALLPROCESSOR_BIT)) {
     for (Index = 0; Index < mProcessorNum; Index++) {
+      MsrData = 0;
       if (Index == mBspIndex) {
-        Print (L"RDMSR[0x%X][ProcNum: %d S%d_C%d_T%d]: [64b] 0x%16lX\n", gUtContext.MsrIndex, Index,
-          mProcessorLocBuf[Index].Location.Package,
-          mProcessorLocBuf[Index].Location.Core,
-          mProcessorLocBuf[Index].Location.Thread,
-          AsmReadMsr64 (gUtContext.MsrIndex));
+        MsrData = AsmReadMsr64 (gUtContext.MsrIndex);
       } else {
         mMpService->StartupThisAP (
                       mMpService,
@@ -396,39 +369,48 @@ UefiToolRoutine (
                       Index,
                       NULL,
                       0,
-                      &Index,
+                      (UINT64 *) &MsrData,
                       NULL
                       );
       }
+
+      Print (L"RDMSR[0x%X][ProcNum: %d S%d_C%d_T%d]: [64b] 0x%16lX\n", gUtContext.MsrIndex, Index,
+        mProcessorLocBuf[Index].Location.Package,
+        mProcessorLocBuf[Index].Location.Core,
+        mProcessorLocBuf[Index].Location.Thread,
+        MsrData);
     }
   }
 
   //
   // Retrieves CPUID information for BSP and all APs
   //
-  if (Opcode == (OPCODE_CPUID_BIT | OPCODE_PROCESSOR_INDEX_BIT)) {
-    Index = gUtContext.ProcessorIndex;
-    if (Index == mBspIndex) {
-      AsmCpuidEx (gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex, &RegisterEax, &RegisterEbx, &RegisterEcx, &RegisterEdx);
+  if (Opcode == (OPCODE_CPUID_BIT | OPCODE_ALLPROCESSOR_BIT)) {
+    for (Index = 0; Index < mProcessorNum; Index++) {
+      ZeroMem (&CpuidRegister, sizeof (UT_CPUID_REGISTER));
+      if (Index == mBspIndex) {
+        AsmCpuidEx (gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex, &CpuidRegister.Eax, &CpuidRegister.Ebx, &CpuidRegister.Ecx, &CpuidRegister.Edx);
+      } else {
+        mMpService->StartupThisAP (
+                      mMpService,
+                      (EFI_AP_PROCEDURE) ApUtReadCpuId,
+                      Index,
+                      NULL,
+                      0,
+                      (VOID *) &CpuidRegister,
+                      NULL
+                      );
+      }
+
       Print (L"CPUID[S%d_C%d_T%d]: Index: 0x%X     SubIndex: 0x%X\n",
-      mProcessorLocBuf[Index].Location.Package,
-      mProcessorLocBuf[Index].Location.Core,
-      mProcessorLocBuf[Index].Location.Thread,
-      gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex);
-      Print (L"EAX = 0x%08X\n", RegisterEax);
-      Print (L"EBX = 0x%08X\n", RegisterEbx);
-      Print (L"ECX = 0x%08X\n", RegisterEcx);
-      Print (L"EDX = 0x%08X\n", RegisterEdx);
-    } else {
-      mMpService->StartupThisAP (
-                    mMpService,
-                    (EFI_AP_PROCEDURE) ApUtReadCpuId,
-                    Index,
-                    NULL,
-                    0,
-                    &Index,
-                    NULL
-                    );
+        mProcessorLocBuf[Index].Location.Package,
+        mProcessorLocBuf[Index].Location.Core,
+        mProcessorLocBuf[Index].Location.Thread,
+        gUtContext.CpuIdIndex, gUtContext.CpuIdSubIndex);
+        Print (L"EAX = 0x%08X\n", CpuidRegister.Eax);
+        Print (L"EBX = 0x%08X\n", CpuidRegister.Ebx);
+        Print (L"ECX = 0x%08X\n", CpuidRegister.Ecx);
+        Print (L"EDX = 0x%08X\n\n", CpuidRegister.Edx);
     }
   }
 
@@ -535,12 +517,9 @@ UefiToolRoutine (
   //
   if (Opcode == OPCODE_UCODE_BIT) {
     for (Index = 0; Index < mProcessorNum; Index++) {
+      CurrentMicrocodeSignature = 0;
       if (Index == mBspIndex) {
-        Print (L"Microcode Signature [ProcNum: %d S%d_C%d_T%d]: 0x%08X\n", Index,
-          mProcessorLocBuf[Index].Location.Package,
-          mProcessorLocBuf[Index].Location.Core,
-          mProcessorLocBuf[Index].Location.Thread,
-          GetCurrentMicrocodeSignature ());
+        CurrentMicrocodeSignature = GetCurrentMicrocodeSignature ();
       } else {
         mMpService->StartupThisAP (
                       mMpService,
@@ -548,10 +527,16 @@ UefiToolRoutine (
                       Index,
                       NULL,
                       0,
-                      &Index,
+                      (UINT32 *) &CurrentMicrocodeSignature,
                       NULL
                       );
       }
+
+      Print (L"Microcode Signature [ProcNum: %d S%d_C%d_T%d]: 0x%08X\n", Index,
+        mProcessorLocBuf[Index].Location.Package,
+        mProcessorLocBuf[Index].Location.Core,
+        mProcessorLocBuf[Index].Location.Thread,
+        CurrentMicrocodeSignature);
     }
   }
 
@@ -583,8 +568,8 @@ ShellAppMain (
   UINT8                     Index;
   UINT64                    Opcode;
 
-  Print (L"\nUEFI Debug Tool. Version: 1.0.0.2\n");
-  Print (L"Copyright (c) 2017 - 2021 Gavin Xue. All rights reserved.\n\n");
+  Print (L"\nUEFI Debug Tool. Version: 1.0.0.3\n");
+  Print (L"Copyright (c) 2017 - 2022 Gavin Xue. All rights reserved.\n\n");
 
   Opcode = 0x0;
   SetMem (&gUtContext, sizeof (UEFI_TOOL_CONTEXT), 0x0);
@@ -606,7 +591,7 @@ ShellAppMain (
       Opcode |= OPCODE_SGDT_BIT;
     } else if ((!StrCmp (Argv[1], L"/CR")) || (!StrCmp (Argv[1], L"-CR"))) {
       Opcode |= OPCODE_CR_BIT;
-    } else if ((!StrCmp (Argv[1], L"/UC")) || (!StrCmp (Argv[1], L"-UC"))) {
+    } else if ((!StrCmp (Argv[1], L"/MCU")) || (!StrCmp (Argv[1], L"-MCU"))) {
       Opcode |= OPCODE_UCODE_BIT;
     } else {
       Print (L"Invaild parameter.\n");
