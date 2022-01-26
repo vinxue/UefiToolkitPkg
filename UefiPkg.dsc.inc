@@ -24,13 +24,9 @@
   $(UEFI_PACKAGE)/Application/PartEdit/PartEdit.inf
   $(UEFI_PACKAGE)/Application/FlashTool/FlashTool.inf
   $(UEFI_PACKAGE)/Application/UefiAvb/UefiAvb.inf
-  $(UEFI_PACKAGE)/Application/GptGen/GptGen.inf
   $(UEFI_PACKAGE)/Application/TscFreq/TscFreq.inf
   $(UEFI_PACKAGE)/Application/GopVer/GopVer.inf
-  $(UEFI_PACKAGE)/Application/DumpLog/DumpLog.inf
-  $(UEFI_PACKAGE)/Application/IshSlot/IshSlot.inf
   $(UEFI_PACKAGE)/Application/GenGuid/GenGuid.inf
-  $(UEFI_PACKAGE)/Application/OtaUpdate/OtaUpdate.inf
   $(UEFI_PACKAGE)/Application/AmdCpuFreq/AmdCpuFreq.inf
   $(UEFI_PACKAGE)/Application/Smn/Smn.inf
   $(UEFI_PACKAGE)/Application/RamDiskApp/RamDiskApp.inf
