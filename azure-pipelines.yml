@@ -56,7 +56,7 @@ jobs:
 # Linux Build Job
 - job: LinuxBuild
   pool:
-    vmImage: 'ubuntu-20.04'
+    vmImage: 'ubuntu-latest'
 
   steps:
   - checkout: self  # self represents the repo where the initial Pipelines YAML file was found

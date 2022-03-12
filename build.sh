@@ -1,13 +1,10 @@
 #!/bin/bash
 
-BUILDDIR=$(dirname "$0")
-pushd "$BUILDDIR" >/dev/null
-BUILDDIR=$(pwd)
-popd >/dev/null
-
 echo "Install required software from apt..."
 sudo apt update || exit 1
-sudo apt install build-essential uuid-dev iasl nasm || exit 1
+sudo apt install build-essential uuid-dev iasl || exit 1
+wget http://mirrors.kernel.org/ubuntu/pool/universe/n/nasm/nasm_2.15.05-1_amd64.deb
+sudo dpkg -i nasm_2.15.05-1_amd64.deb
 
 git clone https://github.com/tianocore/edk2
 cd edk2
