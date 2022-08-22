@@ -1,5 +1,4 @@
 # UefiToolkitPkg - A UEFI toolkit package for development and collection
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/vinxue/UefiToolkitPkg)
 
 ## Build Status
 
