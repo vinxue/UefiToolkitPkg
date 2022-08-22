@@ -56,6 +56,8 @@ StrUpr (
 #define OPCODE_WMM_BIT                        BIT8    // Write MMIO/IO
 #define OPCODE_DUMPMEM_BIT                    BIT9    // Dump memory region to a file
 #define OPCODE_UCODE_BIT                      BIT10   // Get CPU Microcode signature/version
+#define OPCODE_READ_MEM_TEST_BIT              BIT11
+#define OPCODE_WRITE_MEM_TEST_BIT             BIT12
 
 typedef struct {
   // MSR
@@ -252,6 +254,23 @@ GetCurrentMicrocodeSignature (
   return BiosSignIdMsr.Bits.MicrocodeUpdateSignature;
 }
 
+
+VOID
+ReadMemoryOnEachProcessor (
+  OUT UINT64             *MemoryData
+  )
+{
+  *MemoryData = MmioRead64 (gUtContext.MmAddress);
+}
+
+VOID
+WriteMemoryOnEachProcessor (
+  VOID
+  )
+{
+  MmioWrite64 (gUtContext.MmAddress, gUtContext.MmValue);
+}
+
 /**
   The function to be run on the designated AP of the system to get CPU Microcode signature.
 
@@ -279,6 +298,7 @@ UefiToolRoutine (
   UINTN              Data;
   UT_CPUID_REGISTER  CpuidRegister;
   UINT32             CurrentMicrocodeSignature;
+  UINT64             Data64;
 
   //
   // Read a MSR register
@@ -540,6 +560,61 @@ UefiToolRoutine (
     }
   }
 
+  //
+  // Read memory address on each processors
+  //
+  if (Opcode == OPCODE_READ_MEM_TEST_BIT) {
+    for (Index = 0; Index < mProcessorNum; Index++) {
+      Data64 = 0;
+      if (Index == mBspIndex) {
+        Data64 = MmioRead64 (gUtContext.MmAddress);
+      } else {
+        mMpService->StartupThisAP (
+                      mMpService,
+                      (EFI_AP_PROCEDURE) ReadMemoryOnEachProcessor,
+                      Index,
+                      NULL,
+                      0,
+                      (UINT32 *) &Data64,
+                      NULL
+                      );
+      }
+
+      Print (L"Address[0x%lx] [ProcNum: %d S%d_C%d_T%d]: 0x%lX\n", gUtContext.MmAddress, Index,
+        mProcessorLocBuf[Index].Location.Package,
+        mProcessorLocBuf[Index].Location.Core,
+        mProcessorLocBuf[Index].Location.Thread,
+        Data64);
+    }
+  }
+
+  //
+  // Write memory address on each processors
+  //
+  if (Opcode == OPCODE_WRITE_MEM_TEST_BIT) {
+    for (Index = 0; Index < mProcessorNum; Index++) {
+      Data64 = 0;
+      if (Index == mBspIndex) {
+        MmioWrite64 (gUtContext.MmAddress, gUtContext.MmValue);
+      } else {
+        mMpService->StartupThisAP (
+                      mMpService,
+                      (EFI_AP_PROCEDURE) WriteMemoryOnEachProcessor,
+                      Index,
+                      NULL,
+                      0,
+                      NULL,
+                      NULL
+                      );
+      }
+
+      Print (L"Address[0x%lx] Value[0x%lx] [ProcNum: %d S%d_C%d_T%d]\n", gUtContext.MmAddress, gUtContext.MmValue, Index,
+        mProcessorLocBuf[Index].Location.Package,
+        mProcessorLocBuf[Index].Location.Core,
+        mProcessorLocBuf[Index].Location.Thread);
+    }
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -654,8 +729,18 @@ ShellAppMain (
       CopyMem (gUtContext.DumpMemFile, Argv[Index + 3], sizeof (Argv[Index + 3]));
       Index += 4;
       Opcode |= OPCODE_DUMPMEM_BIT;
-    }
-    else {
+
+    } else if ((Index + 1 < Argc) && (StrCmp (Argv[Index], L"-RT") == 0)) {
+      gUtContext.MmAddress = StrHexToUintn (Argv[Index + 1]);
+      Index += 2;
+      Opcode |= OPCODE_READ_MEM_TEST_BIT;
+    } else if ((Index + 1 < Argc) && (StrCmp (Argv[Index], L"-WT") == 0)) {
+      gUtContext.MmAddress = StrHexToUintn (Argv[Index + 1]);
+      gUtContext.MmValue = StrHexToUintn (Argv[Index + 2]);
+      Index += 3;
+      Opcode |= OPCODE_WRITE_MEM_TEST_BIT;
+
+    } else {
       Index++;
     }
   }
