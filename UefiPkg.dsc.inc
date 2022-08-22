@@ -31,6 +31,7 @@
   $(UEFI_PACKAGE)/Application/Smn/Smn.inf
   $(UEFI_PACKAGE)/Application/RamDiskApp/RamDiskApp.inf
   $(UEFI_PACKAGE)/Application/Cpuid/Cpuid.inf
+  $(UEFI_PACKAGE)/Application/HexToBin/HexToBin.inf
 
 [Components.IA32]
   $(UEFI_PACKAGE)/Drivers/Pei/RawDataInit/RawDataInit.inf
