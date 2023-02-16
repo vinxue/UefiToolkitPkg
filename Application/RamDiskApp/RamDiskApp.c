@@ -1,7 +1,7 @@
 /** @file
   A UEFI tool for RAM disk demo.
 
-  Copyright (c) 2021, Gavin Xue. All rights reserved.<BR>
+  Copyright (c) 2021 - 2023, Gavin Xue. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -58,7 +58,7 @@ ReadFileFromDisk (
   }
 
   Status = gBS->AllocatePool (
-                  EfiBootServicesData,
+                  EfiReservedMemoryType,
                   (UINTN) FileSize,
                   (VOID**) &FileBuffer
                   );
