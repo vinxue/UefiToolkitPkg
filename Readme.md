@@ -20,5 +20,5 @@ Linux|[![Build Status](https://dev.azure.com/vinxue/UefiPkg/_apis/build/status/v
 3. Run build commands:
 ```
    edksetup.bat rebuild
-   build -a IA32 -a X64 -b RELEASE -t VS2019 -p UefiToolkitPkg\UefiPkg.dsc
+   build -a IA32 -a X64 -b RELEASE -t VS2019 -p UefiToolkitPkg/UefiPkg.dsc
 ```
