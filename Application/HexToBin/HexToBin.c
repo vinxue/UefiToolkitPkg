@@ -272,7 +272,6 @@ ProcessIntelHexFile (
   UINTN                    LineLength;
   UINTN                    SourceLength;
   UINTN                    MaxLineLength;
-  UINTN                    BinaryFileSize;
   UINTN                    LineNumber;
   UINT8                    ByteCount;
   UINT16                   Address;
@@ -286,7 +285,6 @@ ProcessIntelHexFile (
   BufferEnd        = (UINT8 *) ( (UINTN) DataBuffer + BufferSize);
   CurrentPtr       = (UINT8 *) DataBuffer;
   MaxLineLength    = MAX_LINE_LENGTH;
-  BinaryFileSize   = 0;
   LineNumber       = 0;
 
   SourcePtrLine = AllocatePool (MaxLineLength);

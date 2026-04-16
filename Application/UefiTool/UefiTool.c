@@ -675,6 +675,10 @@ ShellAppMain (
   }
 
   Status = GetProcessorsCpuLocation ();
+  if (EFI_ERROR (Status)) {
+    Print (L"GetProcessorsCpuLocation failed, Status: %r\n", Status);
+    return Status;
+  }
 
   Index = 1;
   while (TRUE) {

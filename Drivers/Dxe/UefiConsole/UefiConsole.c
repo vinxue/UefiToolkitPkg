@@ -164,7 +164,6 @@ UefiConsoleInRead (
 {
   CHAR16              *CurrentString;
   BOOLEAN             Done;
-  UINTN               TabUpdatePos;   // Start index of the string updated by TAB stroke
   UINTN               Column;         // Column of current cursor
   UINTN               Row;            // Row of current cursor
   UINTN               StartColumn;    // Column at the beginning of the line
@@ -183,12 +182,8 @@ UefiConsoleInRead (
 
   BUFFER_LIST         *LinePos;
   BUFFER_LIST         *NewPos;
-  BOOLEAN             InScrolling;
   EFI_STATUS          Status;
-  EFI_SHELL_FILE_INFO *TabCompleteList;
-  EFI_SHELL_FILE_INFO *TabCurrent;
   UINTN               EventIndex;
-  CHAR16              *TabOutputStr;
 
   //
   // If buffer is not large enough to hold a CHAR16, return minimum buffer size
@@ -206,12 +201,7 @@ UefiConsoleInRead (
   Update            = 0;
   Delete            = 0;
   LinePos           = NewPos = (BUFFER_LIST *) (&ViewingSettings.CommandHistory);
-  InScrolling       = FALSE;
   Status            = EFI_SUCCESS;
-  TabOutputStr      = NULL;
-  TabUpdatePos      = 0;
-  TabCompleteList   = NULL;
-  TabCurrent        = NULL;
 
   //
   // Get the screen setting and the current cursor location
@@ -705,7 +695,6 @@ RunShellCommand (
   CHAR16                    *CleanOriginal;
   CHAR16                    *FirstParameter;
   CHAR16                    *TempWalker;
-  SHELL_OPERATION_TYPES     Type;
 
   ASSERT (CmdLine != NULL);
   if (StrLen (CmdLine) == 0) {
@@ -759,7 +748,6 @@ RunShellCommand (
 
   TempWalker = CleanOriginal;
   if (!EFI_ERROR (GetNextParameter (&TempWalker, &FirstParameter, StrSize (CleanOriginal), TRUE))) {
-    Type = Internal_Command;
     Status = RunInternalCommand (CleanOriginal, FirstParameter, NewShellParametersProtocol, CommandStatus);
   }
 

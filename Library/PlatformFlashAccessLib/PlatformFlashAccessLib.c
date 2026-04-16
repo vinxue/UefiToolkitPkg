@@ -408,13 +408,11 @@ PerformFlashWriteWithProgress (
   EFI_PHYSICAL_ADDRESS  Address;
   UINTN                 CountOfBlocks;
   EFI_TPL               OldTpl;
-  BOOLEAN               FlashError;
   UINT8                 *Buf;
 
   Index             = 0;
   Address           = 0;
   CountOfBlocks     = 0;
-  FlashError        = FALSE;
   Buf               = Buffer;
 
   DEBUG((DEBUG_INFO | DEBUG_ERROR, "PerformFlashWrite - 0x%x(%x) - 0x%x\n", (UINTN)FlashAddress, (UINTN)FlashAddressType, Length));
@@ -449,7 +447,6 @@ PerformFlashWriteWithProgress (
       Status  = InternalEraseBlock (Address);
       if (EFI_ERROR(Status)) {
         gBS->RestoreTPL (OldTpl);
-        FlashError = TRUE;
         goto Done;
       }
       Status = InternalWriteBlock (
@@ -459,7 +456,6 @@ PerformFlashWriteWithProgress (
                 );
       if (EFI_ERROR(Status)) {
         gBS->RestoreTPL (OldTpl);
-        FlashError = TRUE;
         goto Done;
       }
     }
