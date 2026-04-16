@@ -68,7 +68,7 @@ jobs:
     displayName: 'Run a Linux build script'
 
   - script: |
-      cp edk2/Build/UefiToolkitPkg/RELEASE_GCC5/X64/*.efi $(Build.ArtifactStagingDirectory)/
+      cp edk2/Build/UefiToolkitPkg/RELEASE_GCC/X64/*.efi $(Build.ArtifactStagingDirectory)/
     displayName: 'Copy build files to Artifact'
 
   - task: PublishBuildArtifacts@1
