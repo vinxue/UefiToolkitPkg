@@ -1,0 +1,35 @@
+## @file
+#  Debug Shell Library
+#
+#  Provides an interactive serial-port command shell for debugging.
+#  Supported commands: readmsr, writemsr, help, exit.
+#
+#  Copyright (c) 2026, Intel Corporation. All rights reserved.<BR>
+#  This program and the accompanying materials
+#  are licensed and made available under the terms and conditions of the BSD License
+#  which accompanies this distribution.  The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+##
+
+[Defines]
+  INF_VERSION    = 0x00010005
+  BASE_NAME      = DebugShellLib
+  FILE_GUID      = A1B2C3D4-E5F6-7890-ABCD-EF1234567890
+  MODULE_TYPE    = BASE
+  VERSION_STRING = 1.0
+  LIBRARY_CLASS  = DebugShellLib
+
+[Sources]
+  DebugShellLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  UefiPkg/UefiPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  SerialPortLib
